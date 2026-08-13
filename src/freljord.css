@@ -2917,6 +2917,130 @@ button {
   .end-turn { width: 150px; height: 46px; }
 }
 
+/* 手机战斗一屏模式：压缩非交互信息，始终露出手牌与结束回合 */
+@media (max-width: 600px) and (max-height: 980px) {
+  .battle-shell {
+    height: 100dvh;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 42px 32px minmax(0, 1fr) 252px;
+    overflow: hidden;
+  }
+  .battle-shell .battle-topbar {
+    height: 42px;
+    min-height: 42px;
+  }
+  .battle-topbar .route-title small { display: none; }
+  .battle-shell > .owned-augments { display: none; }
+  .battle-shell > .equipment-bar {
+    height: 30px;
+    margin: 1px auto;
+  }
+  .battle-shell .equipment-slot { height: 30px; }
+  .battle-shell .equipment-slot img { width: 23px; height: 23px; }
+  .battlefield {
+    min-height: 0;
+    height: 100%;
+    padding: 5px 8px;
+    gap: 4px 8px;
+    grid-template-rows: minmax(0, auto) minmax(54px, auto);
+    overflow: hidden;
+  }
+  .unit-portrait,
+  .unit-portrait.enemy-art {
+    width: clamp(54px, 8.5vh, 72px);
+    height: clamp(54px, 8.5vh, 72px);
+  }
+  .combatant h2 {
+    margin-top: 3px;
+    font-size: 15px;
+  }
+  .combatant > small { display: none; }
+  .health-bar {
+    height: 19px;
+    margin: 3px 0;
+    position: relative;
+    z-index: 1;
+  }
+  .health-bar b {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 11px;
+    line-height: 19px;
+    text-shadow: 0 1px 3px #000, 0 0 3px #000;
+  }
+  .combat-stats { margin: 2px 0; }
+  .combat-stats span { padding: 2px 1px; }
+  .combat-stats small { font-size: 6px; }
+  .combat-stats b { font-size: 10px; }
+  .unit-stats {
+    min-height: 15px;
+    max-height: 29px;
+    overflow: hidden;
+  }
+  .unit-stats span { padding: 2px 3px; font-size: 6px; }
+  .battle-center {
+    min-height: 54px;
+    gap: 5px;
+  }
+  .turn-log,
+  .intent-card,
+  .enemy-intent {
+    min-height: 54px;
+    max-height: 68px;
+    padding: 5px 7px;
+  }
+  .intent-card { grid-template-columns: 25px minmax(0, 1fr); }
+  .intent-card strong { font-size: 15px; }
+  .intent-card b { font-size: 10px; }
+  .intent-card span { font-size: 7px; line-height: 1.2; }
+  .hand-zone {
+    min-height: 0;
+    height: 252px;
+    padding: 2px 0 calc(4px + env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-rows: 17px minmax(0, 1fr) 48px;
+    overflow: hidden;
+  }
+  .swipe-card-hint { grid-row: 1; padding: 0 8px; font-size: 8px; }
+  .deck-counter { display: none; }
+  .cards-row {
+    grid-row: 2;
+    min-height: 0;
+    height: 187px;
+    padding: 34px 10px 3px;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .game-card,
+  .game-card:hover {
+    flex-basis: 122px;
+    width: 122px;
+    height: 150px;
+    padding: 8px 7px;
+  }
+  .game-card .card-icon { font-size: 20px; margin: 2px 0; }
+  .game-card > b { font-size: 11px; }
+  .game-card small { font-size: 6px; }
+  .game-card p { font-size: 7px; line-height: 1.25; overflow: visible; }
+  .game-card.is-dragging,
+  .game-card.is-dragging:hover { --card-lift: -34px; }
+  .turn-controls {
+    grid-row: 3;
+    min-height: 46px;
+    padding: 1px 12px;
+    gap: 12px;
+  }
+  .energy-orb > b { width: 38px; height: 38px; font-size: 16px; }
+  .energy-orb > span { font-size: 8px; }
+  .end-turn { width: 138px; height: 40px; font-size: 13px; }
+}
+
 /* 英雄选择：只保留核心玩法与关键机制 */
 .compact-mechanic-guide { margin-bottom: 14px; }
 .card-choice-overlay {

@@ -347,29 +347,29 @@ const championRoster = {
 
 const championBuilds = {
   darius: [
-    { id: "darius_fighter", name: "征战战士", items: ["cleaver", "shojin", "sterak", "deathdance", "titanic"] },
+    { id: "darius_fighter", name: "征战战士", items: ["cleaver", "shojin", "sterak", "deathdance", "titanic", "trinity", "hexplate"] },
     { id: "darius_bleed", name: "血怒流血", items: ["cleaver", "titanic", "sterak", "shojin", "collector"] },
     { id: "darius_crit", name: "暴击断头台", items: ["collector", "essence", "infinity", "phantom", "deathdance"] },
   ],
   jinx: [
-    { id: "jinx_draw", name: "无限机枪", items: ["bork", "phantom", "kraken", "essence", "bloodthirster"] },
+    { id: "jinx_draw", name: "无限机枪", items: ["bork", "phantom", "kraken", "essence", "bloodthirster", "guinsoo", "trinity"] },
     { id: "jinx_crit", name: "暴击火箭", items: ["collector", "infinity", "bloodthirster", "essence", "phantom"] },
-    { id: "jinx_poke", name: "穿甲Poke", items: ["youmuu", "manamune", "serylda", "collector", "axiom"] },
+    { id: "jinx_poke", name: "穿甲Poke", items: ["youmuu", "manamune", "serylda", "collector", "axiom", "horizon", "hexplate"] },
   ],
   tahmkench: [
-    { id: "tahm_tank", name: "巨胃肉坦", items: ["heartsteel", "sunfire", "titanic", "despair", "warmog"] },
+    { id: "tahm_tank", name: "巨胃肉坦", items: ["heartsteel", "sunfire", "titanic", "despair", "warmog", "frozenheart"] },
     { id: "tahm_ap", name: "裂隙AP", items: ["riftmaker", "nashor", "lichbane", "shadowflame", "rabadon"] },
-    { id: "tahm_shield", name: "盾盾流", items: ["fimbulwinter", "moonstone", "despair", "dawncore", "visage"] },
+    { id: "tahm_shield", name: "盾盾流", items: ["fimbulwinter", "moonstone", "despair", "dawncore", "visage", "frozenheart"] },
   ],
   cho: [
-    { id: "cho_tank", name: "心钢巨兽", items: ["heartsteel", "sunfire", "titanic", "jaksho", "warmog"] },
+    { id: "cho_tank", name: "心钢巨兽", items: ["heartsteel", "sunfire", "titanic", "jaksho", "warmog", "frozenheart"] },
     { id: "cho_ap", name: "裂隙法坦", items: ["riftmaker", "lichbane", "shadowflame", "rabadon", "nashor"] },
-    { id: "cho_burn", name: "灼烧控制", items: ["liandry", "banshee", "riftmaker", "iceborn", "rabadon"] },
+    { id: "cho_burn", name: "灼烧控制", items: ["liandry", "banshee", "riftmaker", "iceborn", "rabadon", "horizon", "cosmic"] },
   ],
   twistedfate: [
-    { id: "tf_burst", name: "命运爆发", items: ["luden", "shadowflame", "rabadon", "lichbane", "banshee"] },
-    { id: "tf_onhit", name: "黄牌普攻", items: ["nashor", "lichbane", "riftmaker", "banshee", "rabadon"] },
-    { id: "tf_burn", name: "持续施法", items: ["liandry", "riftmaker", "luden", "banshee", "shadowflame"] },
+    { id: "tf_burst", name: "命运爆发", items: ["luden", "shadowflame", "rabadon", "lichbane", "banshee", "horizon", "hexplate"] },
+    { id: "tf_onhit", name: "黄牌普攻", items: ["nashor", "lichbane", "riftmaker", "banshee", "rabadon", "guinsoo", "trinity"] },
+    { id: "tf_burn", name: "持续施法", items: ["liandry", "riftmaker", "luden", "banshee", "shadowflame", "cosmic"] },
   ],
 };
 
@@ -546,6 +546,12 @@ const equipment = {
   despair: { id: "despair", name: "无终恨意", price: 30, image: "/game-icons/despair.png", hp: 20, tags: ["护盾", "恢复", "生命"], routes: ["tahm_tank", "tahm_shield"], text: "护盾被消耗后，对敌人造成消耗量 50% 的伤害并恢复等量生命。" },
   moonstone: { id: "moonstone", name: "月石再生器", price: 26, image: "/game-icons/moonstone.png", ap: 4, hp: 10, tags: ["护盾", "恢复"], routes: ["tahm_shield"], text: "厚实表皮的护盾提高 35%，获得护盾时恢复其数值 20% 的生命。" },
   dawncore: { id: "dawncore", name: "黎明核心", price: 34, image: "/game-icons/dawncore.png", ap: 6, tags: ["护盾", "法强"], routes: ["tahm_shield", "tahm_ap"], text: "每持有一件护盾装备，厚实表皮护盾与AP提高 8%。" },
+  trinity: { id: "trinity", name: "三相之力", price: 31, image: "/game-icons/trinity.svg", ad: 4, hp: 10, tags: ["战士", "连招", "普攻"], text: "每回合第一次打出技能后，为下一张 A 充能；该 A 的基础伤害增加 6 + AD×0.7。" },
+  guinsoo: { id: "guinsoo", name: "鬼索的狂暴之刃", price: 29, image: "/game-icons/guinsoo.svg", ad: 3, ap: 3, tags: ["普攻", "连击"], text: "每第 3 张 A 的基础伤害增加 8 + AD×0.5，普攻计数跨回合保留。" },
+  cosmic: { id: "cosmic", name: "宇宙驱动", price: 28, image: "/game-icons/cosmic.svg", ap: 6, hp: 8, tags: ["法强", "抽牌", "技能"], text: "每回合打出的第 2 张技能牌额外抽 1 张牌；每回合触发一次。" },
+  horizon: { id: "horizon", name: "视界专注", price: 30, image: "/game-icons/horizon.svg", ap: 7, tags: ["法强", "预判", "技能"], text: "敌人显示危险或蓄力意图时，Q 与 W 的总伤害提高 25%。" },
+  hexplate: { id: "hexplate", name: "实验性海克斯板甲", price: 32, image: "/game-icons/hexplate.svg", ad: 4, hp: 10, tags: ["终极技能", "能量", "抽牌"], text: "每场战斗第一次打出 R 后恢复 2 能量并抽 1 张牌。" },
+  frozenheart: { id: "frozenheart", name: "冰霜之心", price: 27, image: "/game-icons/frozenheart.svg", hp: 16, tags: ["生命", "护盾", "技能"], text: "每回合第一次打出 E，恢复 1 能量并获得最大生命 8% 的护盾。" },
 };
 
 const equipmentStats = (item) => [
@@ -939,6 +945,12 @@ const augments = [
     icon: "◉",
     text: "强化终极技能对残血敌人的终结能力。",
   },
+  { id: "firstStrike", name: "先发锋芒", rarity: "黄金", icon: "➤", text: "每回合第一张造成伤害的牌，总伤害提高 20%。" },
+  { id: "lastStand", name: "孤注一掷", rarity: "棱彩", icon: "◉", text: "打出一张牌并耗尽能量时，该牌总伤害提高 25%。" },
+  { id: "disruptor", name: "破法回路", rarity: "黄金", icon: "⌁", text: "每回合首次成功打断特殊行动，额外造成 8 点伤害并恢复 1 能量。" },
+  { id: "controlFlow", name: "冰封连锁", rarity: "黄金", icon: "❄", text: "每回合首次成功眩晕敌人，抽 1 张牌。" },
+  { id: "tacticalHand", name: "战术手牌", rarity: "白银", icon: "▣", text: "每场战斗的初始手牌增加 1 张，仍不超过 8 张。" },
+  { id: "patientGuard", name: "寒冬守势", rarity: "黄金", icon: "⬡", text: "结束回合时若保留至少 4 张手牌，敌人行动前获得最大生命 10% 的护盾。" },
   { id: "bloodEmpire", name: "血流成河", rarity: "黄金", icon: "✦", champions: ["darius"], text: "流血上限提高至 7 层，每层流血伤害 +1。" },
   { id: "conqueror", name: "征服者", rarity: "棱彩", icon: "⚔", champions: ["darius"], text: "每连续使用一张牌获得1层征服；每层使伤害+4%，回合结束清空。" },
   { id: "dunkMaster", name: "断头台大师", rarity: "黄金", icon: "◆", champions: ["darius"], text: "R 对满层流血敌人伤害提高35%，斩杀后抽1张。" },
@@ -1410,6 +1422,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     armorPen: run.hero.armorPen || 0,
     critMeter: run.hero.critMeter || 0,
     attacks: 0,
+    basicCards: 0,
     drawsTurn: 0,
     shojinCasts: 0,
     essenceUsed: false,
@@ -1418,6 +1431,15 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     conqueror: 0,
     shieldBash: 0,
     bonusDraw: 0,
+    trinityReady: false,
+    trinityUsed: false,
+    spellsTurn: 0,
+    cosmicUsed: false,
+    hexplateUsed: false,
+    frozenheartUsed: false,
+    firstStrikeUsed: false,
+    disruptorUsed: false,
+    controlFlowUsed: false,
   });
   const [foe, setFoe] = useState({
     hp: base.hp,
@@ -1437,7 +1459,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     marked: false,
     frostPower: 0,
   });
-  const openingHandSize = Math.min(8, 5 + (run.hero.openingDraw || 0));
+  const openingHandSize = Math.min(8, 5 + (run.hero.openingDraw || 0) + (run.augments.includes("tacticalHand") ? 1 : 0));
   const [hand, setHand] = useState(deck.slice(0, openingHandSize));
   const [pile, setPile] = useState(deck.slice(openingHandSize));
   const [discard, setDiscard] = useState([]);
@@ -1492,11 +1514,16 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (heartsteelReady) damage += Math.round(hero.maxHp * 0.08);
       if (run.gear.includes("kraken") && (hero.attacks + 1) % 3 === 0)
         damage += Math.round(14 + hero.ad * 0.8);
+      if (id === "attack" && run.gear.includes("guinsoo") && (hero.basicCards + 1) % 3 === 0)
+        damage += Math.round(8 + hero.ad * 0.5);
+      if (id === "attack" && hero.trinityReady) damage += Math.round(6 + hero.ad * 0.7);
       if (hero.shieldBash > 0) damage += hero.shieldBash;
       if (run.gear.includes("bork")) damage += Math.max(1, Math.round(foe.hp * 0.05));
     }
     if (run.gear.includes("shadowflame") && foe.hp / foe.maxHp < 0.4 && (id === "q" || id === "w"))
       damage = Math.round(damage * 1.2);
+    if (run.gear.includes("horizon") && (intent.dangerous || intent.charge) && (id === "q" || id === "w"))
+      damage = Math.round(damage * 1.25);
     if (isSpell) {
       if (run.gear.includes("luden") && (hero.spells + 1) % 3 === 0)
         damage += Math.round(10 + hero.ap * 0.6);
@@ -1505,6 +1532,13 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (run.augments.includes("echo") && hero.spells === 0 && (id === "q" || id === "w"))
         damage += 7;
     }
+    const previewCost = id === "q" && run.augments.includes("quickRupture")
+      ? Math.max(0, skillSet[id].cost - 1)
+      : skillSet[id].cost;
+    if (damage > 0 && run.augments.includes("firstStrike") && !hero.firstStrikeUsed)
+      damage = Math.round(damage * 1.2);
+    if (damage > 0 && run.augments.includes("lastStand") && hero.energy - previewCost === 0)
+      damage = Math.round(damage * 1.25);
     return Math.max(0, Math.round(damage * HERO_DAMAGE_SCALE));
   };
 
@@ -1645,6 +1679,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     const level = run.upgrades[id];
     let h = { ...hero, energy: hero.energy - actualCost };
     let f = { ...foe };
+    const interruptedBefore = foe.interrupted;
+    const stunnedBefore = foe.stunned;
     const tasteBefore = foe.taste;
     let damage = 0;
     let message = `使用「${skillSet[id].name}」。`;
@@ -1844,6 +1880,12 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         damage += Math.round(h.maxHp * 0.07);
         h.icebornReady = false;
       }
+      if (id === "attack" && h.trinityReady) {
+        const proc = Math.round(6 + h.ad * 0.7);
+        damage += proc;
+        h.trinityReady = false;
+        message += ` 三相咒刃 +${proc}。`;
+      }
       if (heartsteelReady) {
         const growth = Math.max(1, Math.round(h.maxHp * 0.02));
         damage += Math.round(h.maxHp * 0.08);
@@ -1853,7 +1895,9 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         message += ` 心之钢永久生命 +${growth}。`;
       }
       h.attacks += 1;
+      if (id === "attack") h.basicCards += 1;
       if (run.gear.includes("kraken") && h.attacks % 3 === 0) { const proc = Math.round(14 + h.ad * 0.8); damage += proc; message += ` 海妖 +${proc}。`; }
+      if (id === "attack" && run.gear.includes("guinsoo") && h.basicCards % 3 === 0) { const proc = Math.round(8 + h.ad * 0.5); damage += proc; message += ` 鬼索 +${proc}。`; }
       if (h.shieldBash > 0) { damage += h.shieldBash; message += ` 盾击 +${h.shieldBash}。`; h.shieldBash = 0; }
       const machineDraw = champion.id === "jinx" && h.weapon === "机枪" && h.minigun >= 3 && run.augments.includes("overclock");
       if (machineDraw && h.drawsTurn < 2) { h.bonusDraw += 1; h.drawsTurn += 1; }
@@ -1877,6 +1921,14 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         damage += Math.round(h.maxHp * 0.07);
         h.icebornReady = false;
       }
+      if (h.trinityReady) {
+        const proc = Math.round(6 + h.ad * 0.7);
+        damage += proc;
+        h.trinityReady = false;
+        message += ` 三相咒刃 +${proc}。`;
+      }
+      h.basicCards += 1;
+      if (run.gear.includes("guinsoo") && h.basicCards % 3 === 0) { const proc = Math.round(8 + h.ad * 0.5); damage += proc; message += ` 鬼索 +${proc}。`; }
       if (heartsteelReady) {
         const growth = Math.max(1, Math.round(h.maxHp * 0.02));
         damage += Math.round(h.maxHp * 0.08);
@@ -1910,6 +1962,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       (id === "q" || id === "w")
     )
       damage = Math.round(damage * 1.2);
+    if (run.gear.includes("horizon") && (intent.dangerous || intent.charge) && (id === "q" || id === "w"))
+      damage = Math.round(damage * 1.25);
     if (champion.id === "cho" && id === "e") {
       h.eCharges = 2 + Math.floor(level / 2);
       message = `恐惧之刺已激活：强化 ${h.eCharges} 次普攻。`;
@@ -1924,14 +1978,48 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (f.hp / f.maxHp <= threshold)
         damage = Math.max(damage, f.hp + f.shield);
     }
+    if (!interruptedBefore && f.interrupted && run.augments.includes("disruptor") && !h.disruptorUsed) {
+      damage += 16;
+      h.energy = Math.min(h.maxEnergy, h.energy + 1);
+      h.disruptorUsed = true;
+      message += " 破法回路造成 8 点伤害并恢复 1 能量。";
+    }
+    if (!stunnedBefore && f.stunned && run.augments.includes("controlFlow") && !h.controlFlowUsed) {
+      h.bonusDraw += 1;
+      h.controlFlowUsed = true;
+      message += " 冰封连锁抽 1 张牌。";
+    }
     if (isSpell) {
       h.spells += 1;
+      h.spellsTurn += 1;
       if (run.gear.includes("shojin")) { h.shojinCasts += 1; if (h.shojinCasts % 2 === 0 && h.drawsTurn < 2) { h.bonusDraw += 1; h.drawsTurn += 1; } }
       if (run.gear.includes("manamune") && h.spells === 3) h.bonusDraw += 1;
       if (champion.id === "jinx" && id === "r" && run.gear.includes("axiom") && !h.axiomUsed) { h.axiomUsed = true; h.returnUltimate = true; }
       if (run.gear.includes("lichbane") && !h.lichUsed) {
         h.lichReady = true;
         h.lichUsed = true;
+      }
+      if (run.gear.includes("trinity") && !h.trinityUsed) {
+        h.trinityReady = true;
+        h.trinityUsed = true;
+      }
+      if (run.gear.includes("cosmic") && h.spellsTurn === 2 && !h.cosmicUsed) {
+        h.bonusDraw += 1;
+        h.cosmicUsed = true;
+        message += " 宇宙驱动抽 1 张牌。";
+      }
+      if (id === "r" && run.gear.includes("hexplate") && !h.hexplateUsed) {
+        h.energy = Math.min(h.maxEnergy, h.energy + 2);
+        h.bonusDraw += 1;
+        h.hexplateUsed = true;
+        message += " 海克斯板甲恢复 2 能量并抽 1 张牌。";
+      }
+      if (id === "e" && run.gear.includes("frozenheart") && !h.frozenheartUsed) {
+        const shield = Math.round(h.maxHp * 0.08);
+        h.energy = Math.min(h.maxEnergy, h.energy + 1);
+        h.shield += shield;
+        h.frozenheartUsed = true;
+        message += ` 冰霜之心恢复 1 能量并获得 ${shield} 点护盾。`;
       }
       if (run.gear.includes("luden") && h.spells % 3 === 0) {
         damage += Math.round(10 + h.ap * 0.6);
@@ -1950,6 +2038,15 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         (id === "q" || id === "w")
       )
         damage += 7;
+    }
+    if (damage > 0 && run.augments.includes("firstStrike") && !h.firstStrikeUsed) {
+      damage = Math.round(damage * 1.2);
+      h.firstStrikeUsed = true;
+      message += " 先发锋芒使伤害提高 20%。";
+    }
+    if (damage > 0 && run.augments.includes("lastStand") && h.energy === 0) {
+      damage = Math.round(damage * 1.25);
+      message += " 孤注一掷使伤害提高 25%。";
     }
     if (isBasicAttack && h.lastCritical && run.gear.includes("essence") && !h.essenceUsed) {
       h.energy = Math.min(h.maxEnergy, h.energy + 1); h.bonusDraw += 1; h.essenceUsed = true; message += " 夺萃回能并抽牌。";
@@ -2062,6 +2159,12 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     let h = { ...hero },
       f = { ...foe },
       message;
+    let guardMessage = "";
+    if (run.augments.includes("patientGuard") && hand.length >= 4) {
+      const shield = Math.round(h.maxHp * 0.1);
+      h.shield += shield;
+      guardMessage = `寒冬守势获得 ${shield} 点护盾。`;
+    }
     const specialStopped = f.interrupted ||
       (f.silenced && (intent.buff || intent.heal || intent.shield || intent.charge));
     if (f.stunned) {
@@ -2131,6 +2234,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         message += ` 反击 ${reflect} 点。`;
       }
     }
+    if (guardMessage) message = `${guardMessage} ${message}`;
     if (run.gear.includes("sunfire") && f.hp > 0) {
       const burn = Math.round(h.maxHp * 0.04);
       f = damageFoe(f, burn);
@@ -2165,6 +2269,14 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     h.turn += 1;
     h.lichReady = false;
     h.lichUsed = false;
+    h.trinityReady = false;
+    h.trinityUsed = false;
+    h.spellsTurn = 0;
+    h.cosmicUsed = false;
+    h.frozenheartUsed = false;
+    h.firstStrikeUsed = false;
+    h.disruptorUsed = false;
+    h.controlFlowUsed = false;
     h.drawsTurn = 0;
     h.pokeUsed = false;
     h.critEnergyUsed = false;
