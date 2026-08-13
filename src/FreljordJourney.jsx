@@ -73,7 +73,7 @@ const baseStarterDeck = [
 const starterDeck = [...baseStarterDeck];
 
 // 玩家所有直接伤害与卡牌预览共用该倍率，确保显示数值与实际结算一致。
-const HERO_DAMAGE_SCALE = 0.25;
+const HERO_DAMAGE_SCALE = 0.35;
 
 const championRoster = {
   cho: {
@@ -419,7 +419,7 @@ const equipment = {
     image: "/game-icons/warmog.png",
     hp: 30,
     tags: ["生命", "续航"],
-    text: "战斗胜利后恢复最大生命 18%。",
+    text: "战斗胜利后额外恢复最大生命 18%。",
   },
   titanic: {
     id: "titanic",
@@ -2896,7 +2896,7 @@ function GameRun({ championId, onQuit }) {
     }
     setRun((r) => {
       const amp = r.gear.includes("visage") ? 1.5 : 1;
-      const recoveryRatio = r.gear.includes("warmog") ? 0.18 : 0;
+      const recoveryRatio = 0.1 + (r.gear.includes("warmog") ? 0.18 : 0);
       const recoveredHero = { ...hero, hp: Math.min(hero.maxHp, hero.hp + Math.round(hero.maxHp * recoveryRatio * amp)) };
       return { ...r, hero: recoveredHero, gold: r.gold + enemy.gold };
     });
