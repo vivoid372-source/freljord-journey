@@ -3854,6 +3854,21 @@ button {
     margin: 3px 0 0;
     font-size: 8px;
   }
+  .final-challenge-map .chapter-track {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .final-challenge-map .route-node {
+    height: 210px;
+    max-height: 210px;
+    align-self: center;
+    border-color: rgba(224, 91, 75, 0.72);
+    background: linear-gradient(160deg, rgba(74, 22, 19, 0.86), rgba(7, 20, 29, 0.96));
+    box-shadow: 0 0 35px rgba(180, 54, 40, 0.16);
+  }
+  .final-challenge-map .route-node strong {
+    border-color: #e26f5b;
+    color: #ffd285;
+  }
 
   .gear-shop-screen {
     box-sizing: border-box;

@@ -61,15 +61,11 @@ const baseStarterDeck = [
   "w",
   "e",
   "attack",
-  "q",
   "attack",
   "r",
   "attack",
-  "w",
   "attack",
-  "e",
   "attack",
-  "q",
   "attack",
 ];
 
@@ -77,7 +73,7 @@ const baseStarterDeck = [
 const starterDeck = [...baseStarterDeck];
 
 // 玩家所有直接伤害与卡牌预览共用该倍率，确保显示数值与实际结算一致。
-const HERO_DAMAGE_SCALE = 0.44;
+const HERO_DAMAGE_SCALE = 0.25;
 
 const championRoster = {
   cho: {
@@ -725,6 +721,22 @@ const enemies = {
       },
     ],
   },
+  demonTeemo: {
+    name: "提莫大魔王",
+    subtitle: "登顶终极挑战",
+    hp: 520,
+    gold: 0,
+    image: "/game-icons/enemy-teemo.png",
+    theme: "boss",
+    finalBoss: true,
+    demonBoss: true,
+    actions: [
+      { name: "恶魔吹箭", text: "造成 18 点伤害，并施加致盲", damage: 18, blind: 2, icon: "➶", dangerous: true },
+      { name: "剧毒射击", text: "造成 16 点伤害", damage: 16, icon: "☠" },
+      { name: "蘑菇陷阱", text: "蓄力 36 点伤害；可被打断", charge: 36, icon: "●", dangerous: true },
+      { name: "恶魔突袭", text: "造成 36 点伤害", damage: 36, icon: "⚔", dangerous: true },
+    ],
+  },
 };
 
 const route = [
@@ -871,9 +883,18 @@ const route = [
     chapter: 3,
     type: "battle",
     title: "冰霜王座",
-    subtitle: "最终首领",
+    subtitle: "冰霜王座首领",
     enemy: "lissandra",
     icon: "♛",
+    summitBoss: true,
+  },
+  {
+    chapter: 4,
+    type: "battle",
+    title: "班德尔魔王殿",
+    subtitle: "最终首领",
+    enemy: "demonTeemo",
+    icon: "☠",
     finalBoss: true,
   },
 ];
@@ -1277,7 +1298,7 @@ function AugmentBar({ owned }) {
 
 function Map({ run, onChoose, onQuit }) {
   const current = route[run.node];
-  const chapterNames = ["冰原荒野", "部族领地", "冰霜王座"];
+  const chapterNames = ["冰原荒野", "部族领地", "冰霜王座", "提莫大魔王挑战"];
   const chapterNodes = route
     .map((node, i) => ({ ...node, index: i }))
     .filter((node) => node.chapter === current?.chapter);
@@ -1291,7 +1312,7 @@ function Map({ run, onChoose, onQuit }) {
     return () => clearTimeout(timer);
   }, [current, onChoose]);
   return (
-    <main className="map-shell transition-map">
+    <main className={`map-shell transition-map ${current?.chapter === 4 ? "final-challenge-map" : ""}`}>
       <Header run={run} onQuit={onQuit} label="旅程推进" />
       <section className="map-heading">
         <div className="eyebrow">CHAPTER {current?.chapter}</div>
@@ -1308,18 +1329,18 @@ function Map({ run, onChoose, onQuit }) {
             "--walker-from-x": `${5 + (Math.max(0, currentChapterIndex - 1) / Math.max(1, chapterNodes.length - 1)) * 90}%`,
             "--walker-to-x": `${5 + (currentChapterIndex / Math.max(1, chapterNodes.length - 1)) * 90}%`,
             "--walker-row": chapterNodes.length - currentChapterIndex,
-            "--walker-start-shift": currentChapterIndex === 0 ? "0px" : "calc(100% + 5px)",
-            "--walker-mid-shift": currentChapterIndex === 0 ? "0px" : "50%",
+            "--walker-start-shift": current?.chapter === 4 ? "240px" : currentChapterIndex === 0 ? "0px" : "calc(100% + 5px)",
+            "--walker-mid-shift": current?.chapter === 4 ? "120px" : currentChapterIndex === 0 ? "0px" : "50%",
           }}
           aria-label={`${championRoster[run.championId].name}正在前往${current?.title}`}
         >
           <img src={championRoster[run.championId].image} alt="" />
         </div>
-        {chapterNodes.map((node) => (
+        {chapterNodes.map((node, chapterIndex) => (
           <div
             key={`${node.index}-${node.title}`}
-            className={`route-node ${node.index < run.node ? "done" : ""} ${node.index === run.node ? "current" : ""} ${node.chapterBoss || node.finalBoss ? "boss-node" : ""}`}
-            style={{ "--route-order": chapterNodes.length - node.index }}
+            className={`route-node ${node.index < run.node ? "done" : ""} ${node.index === run.node ? "current" : ""} ${node.chapterBoss || node.summitBoss || node.finalBoss ? "boss-node" : ""}`}
+            style={{ "--route-order": chapterNodes.length - chapterIndex }}
           >
             <span className="route-index">{node.index + 1}</span>
             <strong>{node.icon}</strong>
@@ -1366,22 +1387,22 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
   const skillSet = champion.skills;
   const template = enemies[enemyId];
   const chapter = route[run.node]?.chapter || 1;
-  const hpScale = [1.6, 2.8, 4.5][chapter - 1];
-  const offenseScale = [1.12, 1.42, 1.7][chapter - 1];
-  const sustainScale = [1.32, 2.05, 3.1][chapter - 1];
-  const hpRankScale = template.finalBoss ? 0.82 : template.boss ? 1.15 : template.elite ? 1.22 : 1;
-  const offenseRankScale = template.finalBoss ? 0.78 : template.boss ? 1.02 : template.elite ? 1.1 : 1;
+  const hpScale = [1.6, 2.8, 4.5, 4.5][chapter - 1];
+  const offenseScale = [1.12, 1.42, 1.7, 1.9][chapter - 1];
+  const sustainScale = [1.32, 2.05, 3.1, 3.4][chapter - 1];
+  const hpRankScale = template.demonBoss ? 0.86 : template.finalBoss ? 0.82 : template.boss ? 1.15 : template.elite ? 1.22 : 1;
+  const offenseRankScale = template.demonBoss ? 0.9 : template.finalBoss ? 0.78 : template.boss ? 1.02 : template.elite ? 1.1 : 1;
   const scaleAction = (action) => {
     const scaled = {
       ...action,
-      damage: action.damage ? Math.round(action.damage * offenseScale * offenseRankScale) : action.damage,
+      damage: action.damage ? Math.round(action.damage * offenseScale * offenseRankScale * (action.dangerous ? 1 : 1.2)) : action.damage,
       charge: action.charge ? Math.round(action.charge * offenseScale * offenseRankScale) : action.charge,
       buff: action.buff ? Math.round(action.buff * offenseScale) : action.buff,
       shield: action.shield ? Math.round(action.shield * sustainScale * hpRankScale) : action.shield,
       heal: action.heal ? Math.round(action.heal * sustainScale * hpRankScale) : action.heal,
     };
     if (scaled.charge) scaled.text = `蓄力 ${scaled.charge} 点伤害；可被打断`;
-    else if (scaled.damage) scaled.text = `造成 ${scaled.damage} 点伤害${scaled.drain ? `，下回合能量 -${scaled.drain}` : ""}`;
+    else if (scaled.damage) scaled.text = `造成 ${scaled.damage} 点伤害${scaled.drain ? `，下回合能量 -${scaled.drain}` : ""}${scaled.blind ? `，施加${scaled.blind}次致盲` : ""}`;
     else if (scaled.buff) scaled.text = `永久增加 ${scaled.buff} 点攻击；可被沉默`;
     else if (scaled.shield) scaled.text = `获得 ${scaled.shield} 点护盾；可被沉默`;
     else if (scaled.heal) scaled.text = `恢复 ${scaled.heal} 点生命；可被沉默`;
@@ -1473,6 +1494,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     taste: 0,
     marked: false,
     frostPower: 0,
+    blind: 0,
   });
   const openingHandSize = Math.min(8, 5 + (run.hero.openingDraw || 0) + (run.augments.includes("tacticalHand") ? 1 : 0));
   const [hand, setHand] = useState(deck.slice(0, openingHandSize));
@@ -1703,6 +1725,18 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     const isBasicAttack = id === "attack" || (champion.id === "darius" && id === "w");
     const bleedCap = run.augments.includes("bloodEmpire") ? 7 : 5;
     const canCrit = isBasicAttack || (champion.id === "darius" && id === "r") || (champion.id === "jinx" && (id === "w" || id === "r"));
+
+    if (id === "attack" && h.blind > 0) {
+      h.blind -= 1;
+      if (crypto.getRandomValues(new Uint8Array(1))[0] < 128) {
+        const nextHand = hand.filter((_, i) => i !== index);
+        setHero(h);
+        setHand(nextHand);
+        setDiscard([...discard, id]);
+        setLog([`致盲生效，「${skillSet[id].name}」落空了。`]);
+        return;
+      }
+    }
 
     if (champion.id === "darius") {
       if (id === "attack") {
@@ -2251,6 +2285,10 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       message = bansheeTriggered
         ? `女妖面纱抵消了「${intent.name}」的全部伤害。`
         : `${base.name}发动「${intent.name}」，造成 ${taken} 点伤害。`;
+      if (intent.blind && !bansheeTriggered) {
+        h.blind = Math.max(h.blind, intent.blind);
+        message += ` 致盲：接下来 ${intent.blind} 次普攻各有50%几率落空。`;
+      }
       if (blocked > 0 && run.gear.includes("despair")) { const pulse = Math.round(blocked * 0.5); f = damageFoe(f, pulse); h.hp = Math.min(h.maxHp, h.hp + pulse); message += ` 无终恨意反击并恢复 ${pulse} 点。`; }
       if (h.hp > 0 && h.hp / h.maxHp < 0.4 && run.gear.includes("sterak") && !h.sterakUsed) { const shield = Math.round(h.maxHp * 0.25); h.shield += shield; h.sterakUsed = true; message += ` 斯特拉克获得 ${shield} 点护盾。`; }
       if (
@@ -2281,6 +2319,14 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       const bleedDamage = Math.round(f.bleed * (run.augments.includes("bloodEmpire") ? 3 : 2) * HERO_DAMAGE_SCALE);
       f = damageFoe(f, bleedDamage);
       message += ` 流血造成 ${bleedDamage} 点。`;
+    }
+    if (f.bleed > 0) {
+      f.bleed -= 1;
+      message += ` 流血衰减至 ${f.bleed} 层。`;
+    }
+    if (f.taste > 0) {
+      f.taste -= 1;
+      message += ` 品味衰减至 ${f.taste} 层。`;
     }
     if (run.augments.includes("secondWind") && h.hp > 0) {
       const healed = Math.min(4, h.maxHp - h.hp);
@@ -2395,6 +2441,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
           </div>
           <div className="unit-stats">
             <span>⬡ 护盾 {hero.shield}</span>
+            {hero.blind > 0 && <span className="enemy-debuff">☄ 致盲 {hero.blind}次 · 普攻50%落空</span>}
             {champion.id === "twistedfate" && <span>▣ {hero.empowered ? `下一张A：${hero.selectedCard}` : "W：蓝 / 红 / 金三选一"}</span>}
             {champion.id === "jinx" && <span>⇄ {hero.weapon} · 连击 {hero.minigun}</span>}
             {hero.crit > 0 && <span>✹ 暴击 {hero.crit}% · 蓄积 {hero.critMeter}/100</span>}
@@ -2751,10 +2798,10 @@ function Result({ win, onBack }) {
     <main className="result-screen">
       <div>
         <span className="result-rune">{win ? "❄" : "☠"}</span>
-        <h1>{win ? "三章远征完成" : "旅程止步于此"}</h1>
+        <h1>{win ? "大魔王挑战完成" : "旅程止步于此"}</h1>
         <p>
           {win
-            ? "你的五件装备与四枚海克斯完成联动，冰霜王座的试炼已经结束。"
+            ? "你穿越冰霜王座并击败了提莫大魔王，真正完成了弗雷尔卓德登顶挑战。"
             : "危险行动必须认真应对。调整装备路线，再来一次。"}
         </p>
         <button className="start-button" onClick={onBack}>
@@ -2809,13 +2856,28 @@ function GameRun({ championId, onQuit }) {
     } else setScreen("rest");
   }, []);
   const winBattle = (hero, enemy) => {
+    const node = route[run.node];
+    if (node.summitBoss) {
+      setRun((r) => ({
+        ...r,
+        hero: { ...hero, hp: hero.maxHp },
+        gold: r.gold + enemy.gold,
+        node: r.node + 1,
+      }));
+      setScreen("map");
+      return;
+    }
+    if (node.finalBoss) {
+      setRun((r) => ({ ...r, hero: { ...hero, hp: hero.maxHp }, gold: r.gold + enemy.gold }));
+      setScreen("victory");
+      return;
+    }
     setRun((r) => {
       const amp = r.gear.includes("visage") ? 1.5 : 1;
       const recoveryRatio = r.gear.includes("warmog") ? 0.18 : 0;
       const recoveredHero = { ...hero, hp: Math.min(hero.maxHp, hero.hp + Math.round(hero.maxHp * recoveryRatio * amp)) };
       return { ...r, hero: recoveredHero, gold: r.gold + enemy.gold };
     });
-    const node = route[run.node];
     setPostBattle({ augment: !!node.augment, finalBoss: !!enemy.finalBoss });
     setBought(false);
     setScreen("gear");
