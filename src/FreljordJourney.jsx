@@ -76,7 +76,8 @@ const baseStarterDeck = [
 // 普攻与技能接近 1:1；每场战斗和弃牌回洗时都会重新洗牌。
 const starterDeck = [...baseStarterDeck];
 
-const HERO_DAMAGE_SCALE = 0.5;
+// 玩家所有直接伤害与卡牌预览共用该倍率，确保显示数值与实际结算一致。
+const HERO_DAMAGE_SCALE = 0.44;
 
 const championRoster = {
   cho: {
@@ -1363,11 +1364,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
   const skillSet = champion.skills;
   const template = enemies[enemyId];
   const chapter = route[run.node]?.chapter || 1;
-  const hpScale = [1.45, 2.5, 4][chapter - 1];
-  const offenseScale = [1, 1.25, 1.5][chapter - 1];
-  const sustainScale = [1.2, 1.85, 2.8][chapter - 1];
-  const hpRankScale = template.finalBoss ? 0.78 : template.boss ? 1.1 : template.elite ? 1.18 : 1;
-  const offenseRankScale = template.finalBoss ? 0.72 : template.boss ? 0.96 : template.elite ? 1.04 : 1;
+  const hpScale = [1.6, 2.8, 4.5][chapter - 1];
+  const offenseScale = [1.12, 1.42, 1.7][chapter - 1];
+  const sustainScale = [1.32, 2.05, 3.1][chapter - 1];
+  const hpRankScale = template.finalBoss ? 0.82 : template.boss ? 1.15 : template.elite ? 1.22 : 1;
+  const offenseRankScale = template.finalBoss ? 0.78 : template.boss ? 1.02 : template.elite ? 1.1 : 1;
   const scaleAction = (action) => {
     const scaled = {
       ...action,
