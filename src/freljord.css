@@ -3570,3 +3570,395 @@ button {
   .shop-shell .gear-icon{width:48px;height:48px}
   .shop-shell .gear-card h3{font-size:17px}
 }
+
+/* 手机体验版：完整放大战况、大卡横滑、路线与商店保持单页 */
+.route-hero-walker {
+  position: absolute;
+  z-index: 8;
+  left: 7%;
+  top: 35px;
+  width: 38px;
+  height: 38px;
+  pointer-events: none;
+  offset-path: path("M 0 0 H 1000");
+  offset-distance: var(--walker-to);
+  animation: heroWalkDesktop 2.35s ease-in-out both;
+}
+.route-hero-walker img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #99e8f7;
+  box-shadow: 0 0 18px rgba(105, 221, 242, 0.72);
+}
+@keyframes heroWalkDesktop {
+  from { offset-distance: var(--walker-from); transform: translateY(-2px) rotate(-3deg); }
+  45% { transform: translateY(-8px) rotate(3deg); }
+  to { offset-distance: var(--walker-to); transform: translateY(-2px) rotate(0); }
+}
+
+@media (max-width: 600px) and (max-height: 980px) {
+  .battle-shell {
+    grid-template-rows: 42px 34px 365px minmax(0, 1fr);
+  }
+  .battle-shell > .equipment-bar {
+    width: calc(100% - 16px);
+    height: 32px;
+    margin: 1px auto;
+  }
+  .battle-shell .equipment-slot { height: 32px; }
+  .battle-shell .equipment-slot img { width: 25px; height: 25px; }
+  .battlefield {
+    height: 365px;
+    padding: 9px 10px 6px;
+    grid-template-rows: minmax(0, 1fr) 34px;
+    gap: 7px 10px;
+    overflow: hidden;
+  }
+  .unit-portrait,
+  .unit-portrait.enemy-art {
+    width: 88px;
+    height: 88px;
+  }
+  .combatant h2 {
+    margin-top: 5px;
+    font-size: 19px;
+  }
+  .combatant > small { display: block; font-size: 7px; margin-top: 2px; }
+  .health-bar {
+    height: 21px;
+    margin: 5px 0 3px;
+  }
+  .health-bar b { font-size: 12px; line-height: 21px; }
+  .combat-stats {
+    min-height: 39px;
+    margin: 3px 0;
+  }
+  .combat-stats span { padding: 4px 2px; }
+  .combat-stats small { font-size: 7px; }
+  .combat-stats b { font-size: 12px; }
+  .unit-stats {
+    min-height: 24px;
+    max-height: 46px;
+    margin-top: 4px;
+    gap: 4px;
+    overflow: visible;
+  }
+  .unit-stats span {
+    padding: 3px 5px;
+    font-size: 7px;
+    line-height: 1.3;
+  }
+  .mobile-enemy-intent {
+    min-height: 76px;
+    max-height: 88px;
+    margin-top: 5px;
+    padding: 7px 8px;
+    grid-template-columns: 31px minmax(0, 1fr);
+  }
+  .mobile-enemy-intent small { font-size: 7px; }
+  .mobile-enemy-intent strong { font-size: 19px; }
+  .mobile-enemy-intent b { font-size: 12px; }
+  .mobile-enemy-intent span {
+    display: block;
+    font-size: 8px;
+    line-height: 1.35;
+    overflow: visible;
+  }
+  .turn-log {
+    min-height: 32px;
+    max-height: 32px;
+    padding: 6px 9px;
+    font-size: 9px;
+    line-height: 18px;
+  }
+  .hand-zone {
+    padding: 3px 0 calc(3px + env(safe-area-inset-bottom));
+    grid-template-rows: 18px minmax(0, 1fr) 51px;
+  }
+  .swipe-card-hint { font-size: 8px; line-height: 17px; }
+  .cards-row {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 8px 12px 7px;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 12px;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .game-card,
+  .game-card:hover {
+    box-sizing: border-box;
+    flex: 0 0 142px;
+    width: 142px;
+    height: min(226px, calc(100% - 4px));
+    max-height: 226px;
+    min-height: 0;
+    aspect-ratio: auto;
+    padding: 12px 9px 10px;
+    scroll-snap-align: start;
+    transform: none;
+    overflow: hidden;
+  }
+  .game-card .card-cost { width: 29px; height: 29px; font-size: 12px; }
+  .game-card .skill-key { width: 19px; height: 19px; font-size: 9px; }
+  .game-card .card-icon { margin: 10px 0 5px; font-size: 31px; }
+  .game-card > b { font-size: 15px; line-height: 1.2; }
+  .game-card small { margin: 4px 0; font-size: 8px; }
+  .game-card p {
+    display: block;
+    margin: auto 0 0;
+    font-size: 9px;
+    line-height: 1.38;
+    overflow: visible;
+  }
+  .turn-controls {
+    min-height: 49px;
+    padding: 2px 10px;
+  }
+  .energy-orb > b { width: 39px; height: 39px; font-size: 17px; }
+  .end-turn { width: 150px; height: 42px; font-size: 13px; }
+
+  .transition-map {
+    box-sizing: border-box;
+    height: 100dvh;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 42px 100px 38px 28px minmax(0, 1fr) 40px;
+    padding: 0 10px 8px;
+    overflow: hidden;
+  }
+  .transition-map .battle-topbar {
+    width: calc(100% + 20px);
+    height: 42px;
+    min-height: 42px;
+    margin-left: -10px;
+    padding: 0 10px;
+  }
+  .transition-map .map-heading {
+    padding: 13px 5px 7px;
+  }
+  .transition-map .map-heading .eyebrow { font-size: 8px; }
+  .transition-map .map-heading h1 { margin: 5px 0; font-size: 27px; }
+  .transition-map .map-heading p { font-size: 9px; }
+  .transition-map > .equipment-bar {
+    width: 100%;
+    height: 34px;
+    margin: 2px 0;
+  }
+  .transition-map > .owned-augments {
+    width: 100%;
+    min-height: 24px;
+    height: 24px;
+    margin: 1px 0;
+  }
+  .transition-map .chapter-track {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 24px 0 0;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 4px;
+    align-items: center;
+  }
+  .transition-map .route-line {
+    left: 5%;
+    right: 5%;
+    top: 50%;
+    bottom: auto;
+    width: auto;
+    height: 1px;
+  }
+  .transition-map .route-node {
+    box-sizing: border-box;
+    width: 100%;
+    height: 106px;
+    padding: 7px 2px;
+    display: flex;
+    text-align: center;
+  }
+  .transition-map .route-node strong {
+    width: 38px;
+    height: 38px;
+    margin: 12px 0 6px;
+    font-size: 16px;
+  }
+  .transition-map .route-node b { font-size: 7px; }
+  .transition-map .route-node small { font-size: 6px; }
+  .transition-map .route-hero-walker {
+    left: 5%;
+    top: calc(50% - 42px);
+    width: 42px;
+    height: 42px;
+    offset-path: none;
+    animation: heroWalkMobile 2.35s ease-in-out both;
+  }
+  @keyframes heroWalkMobile {
+    from { left: calc(var(--walker-from) - 18px); transform: translateY(0) rotate(-4deg); }
+    45% { transform: translateY(-10px) rotate(4deg); }
+    to { left: calc(var(--walker-to) - 18px); transform: translateY(0) rotate(0); }
+  }
+  .transition-map .auto-progress {
+    height: 34px;
+    margin: 3px 0 0;
+    font-size: 8px;
+  }
+
+  .gear-shop-screen {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 42px 105px 36px minmax(0, 1fr) 58px;
+    padding: 0 9px 7px;
+    overflow: hidden;
+  }
+  .gear-shop-screen .battle-topbar {
+    width: calc(100% + 18px);
+    height: 42px;
+    min-height: 42px;
+    margin-left: -9px;
+    padding: 0 10px;
+  }
+  .gear-shop-screen > .owned-augments { display: none; }
+  .gear-shop-screen .node-heading {
+    box-sizing: border-box;
+    width: 100%;
+    height: 105px;
+    margin: 0;
+    padding: 9px 3px;
+    gap: 10px;
+  }
+  .gear-shop-screen .node-symbol {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+    font-size: 20px;
+  }
+  .gear-shop-screen .node-heading .eyebrow { font-size: 7px; letter-spacing: 0.15em; }
+  .gear-shop-screen .node-heading h1 { margin: 4px 0; font-size: 23px; }
+  .gear-shop-screen .node-heading p { font-size: 8px; line-height: 1.35; }
+  .gear-shop-screen > .equipment-bar {
+    width: 100%;
+    height: 34px;
+    margin: 1px 0;
+  }
+  .gear-shop-screen .gear-stock {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 5px 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    overflow: hidden;
+  }
+  .gear-shop-screen .gear-card {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 7px 9px;
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
+    column-gap: 9px;
+    text-align: left;
+    overflow: hidden;
+  }
+  .gear-shop-screen .gear-card.disabled {
+    opacity: 0.76;
+    filter: none;
+    background: linear-gradient(145deg, #122635, #09151f);
+  }
+  .gear-shop-screen .gear-card.disabled h3,
+  .gear-shop-screen .gear-card.disabled p { color: #bdd0d8; }
+  .gear-shop-screen .gear-card.disabled > b,
+  .gear-shop-screen .gear-card.disabled > em { color: #ef968b; }
+  .gear-shop-screen .gear-icon {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    width: 45px;
+    height: 45px;
+    margin: 0;
+  }
+  .gear-shop-screen .gear-tags,
+  .gear-shop-screen .gear-stats { display: none; }
+  .gear-shop-screen .gear-card h3 {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+    font-size: 14px;
+    text-align: left;
+  }
+  .gear-shop-screen .gear-card > p {
+    grid-column: 2 / 4;
+    grid-row: 2;
+    margin: 2px 0;
+    font-size: 7px;
+    line-height: 1.28;
+    text-align: left;
+  }
+  .gear-shop-screen .route-fit {
+    grid-column: 2 / 4;
+    grid-row: 3;
+    margin: 0;
+    font-size: 6px !important;
+    text-align: left;
+  }
+  .gear-shop-screen .gear-card > b {
+    grid-column: 3;
+    grid-row: 1;
+    margin: 0;
+    font-size: 11px;
+  }
+  .gear-shop-screen .gear-card > em {
+    grid-column: 3;
+    grid-row: 3;
+    margin: 0;
+    font-size: 7px;
+  }
+  .gear-shop-screen .node-actions {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 54px;
+    margin: 0;
+    padding: 5px 0 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+  .gear-shop-screen .node-actions span { font-size: 8px; }
+  .gear-shop-screen .skip-gear { padding: 9px 12px; font-size: 9px; }
+}
+
+@media (max-width: 600px) and (max-height: 780px) {
+  .battle-shell { grid-template-rows: 42px 32px 330px minmax(0, 1fr); }
+  .battlefield { height: 330px; }
+  .unit-portrait,
+  .unit-portrait.enemy-art { width: 74px; height: 74px; }
+  .mobile-enemy-intent { min-height: 68px; max-height: 74px; }
+  .game-card,
+  .game-card:hover { flex-basis: 130px; width: 130px; height: min(202px, calc(100% - 3px)); }
+  .transition-map { grid-template-rows: 42px 90px 34px 25px minmax(0, 1fr) 36px; }
+  .transition-map .route-node { height: 92px; }
+  .gear-shop-screen { grid-template-rows: 42px 91px 32px minmax(0, 1fr) 52px; }
+  .gear-shop-screen .node-heading { height: 91px; }
+}

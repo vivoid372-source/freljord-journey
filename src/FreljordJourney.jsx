@@ -18,7 +18,7 @@ const skills = {
     name: "破裂",
     type: "spell",
     typeName: "技能",
-    cost: 2,
+    cost: 1,
     icon: "△",
     text: "造成法术伤害并眩晕敌人；眩晕会使敌人本回合无法行动。",
   },
@@ -119,7 +119,7 @@ const championRoster = {
         name: "大杀四方",
         type: "spell",
         typeName: "技能",
-        cost: 2,
+        cost: 1,
         icon: "◯",
         text: "造成伤害、恢复生命并对敌人施加1层流血。",
       },
@@ -180,7 +180,7 @@ const championRoster = {
         name: "万能牌",
         type: "spell",
         typeName: "技能",
-        cost: 2,
+        cost: 1,
         icon: "⋙",
         text: "造成高额魔法伤害；消耗命运标记增伤。",
       },
@@ -261,7 +261,7 @@ const championRoster = {
         name: "嚼火者",
         type: "spell",
         typeName: "技能",
-        cost: 2,
+        cost: 1,
         icon: "△",
         text: "布置嚼火者并眩晕敌人；敌人本回合完全无法行动。",
       },
@@ -312,7 +312,7 @@ const championRoster = {
         name: "深渊潜航",
         type: "spell",
         typeName: "技能",
-        cost: 2,
+        cost: 1,
         icon: "⌁",
         text: "造成魔法伤害并打断蓄力。",
       },
@@ -562,7 +562,7 @@ const enemies = {
     name: "冰原狼王",
     subtitle: "冰原生物",
     hp: 58,
-    gold: 8,
+    gold: 10,
     image: "/game-icons/enemy-wolf.png",
     theme: "wolf",
     actions: [
@@ -588,7 +588,7 @@ const enemies = {
     name: "冰霜弓灵",
     subtitle: "弗雷尔卓德灵体",
     hp: 76,
-    gold: 9,
+    gold: 18,
     image: "/game-icons/enemy-archer.png",
     theme: "archer",
     actions: [
@@ -1279,9 +1279,13 @@ function Map({ run, onChoose, onQuit }) {
   const chapterNodes = route
     .map((node, i) => ({ ...node, index: i }))
     .filter((node) => node.chapter === current?.chapter);
+  const currentChapterIndex = Math.max(
+    0,
+    chapterNodes.findIndex((node) => node.index === run.node),
+  );
   useEffect(() => {
     if (!current) return undefined;
-    const timer = setTimeout(() => onChoose(current), 850);
+    const timer = setTimeout(() => onChoose(current), 2800);
     return () => clearTimeout(timer);
   }, [current, onChoose]);
   return (
@@ -1296,6 +1300,16 @@ function Map({ run, onChoose, onQuit }) {
       <AugmentBar owned={run.augments} />
       <section className="route-track chapter-track">
         <div className="route-line" />
+        <div
+          className="route-hero-walker"
+          style={{
+            "--walker-from": `${5 + (Math.max(0, currentChapterIndex - 1) / Math.max(1, chapterNodes.length - 1)) * 90}%`,
+            "--walker-to": `${5 + (currentChapterIndex / Math.max(1, chapterNodes.length - 1)) * 90}%`,
+          }}
+          aria-label={`${championRoster[run.championId].name}正在前往${current?.title}`}
+        >
+          <img src={championRoster[run.championId].image} alt="" />
+        </div>
         {chapterNodes.map((node) => (
           <div
             key={`${node.index}-${node.title}`}
@@ -2524,12 +2538,12 @@ function GearShop({ run, stock, purchased, onBuy, onContinue, onQuit }) {
   const full = run.gear.length >= 5;
   const noAffordable = stock.every((id) => equipment[id].price > run.gold);
   useEffect(() => {
-    if (!purchased && !full && !noAffordable) return undefined;
-    const timer = setTimeout(onContinue, purchased ? 500 : 1100);
+    if (!purchased) return undefined;
+    const timer = setTimeout(onContinue, 700);
     return () => clearTimeout(timer);
-  }, [purchased, full, noAffordable, onContinue]);
+  }, [purchased, onContinue]);
   return (
-    <main className="shop-shell">
+    <main className="shop-shell gear-shop-screen">
       <Header run={run} onQuit={onQuit} label="战后装备选择" />
       <section className="node-heading">
         <div className="node-symbol">♜</div>
@@ -2540,9 +2554,9 @@ function GearShop({ run, stock, purchased, onBuy, onContinue, onQuit }) {
             {purchased
               ? "正在自动进入下一阶段。"
               : noAffordable
-                ? "金币不足，本次商店将自动跳过。"
+                ? "金币不足，你可以查看装备后自行选择跳过，并保留金币。"
                 : full
-                  ? "装备栏已满，本次商店将自动跳过。"
+                  ? "装备栏已满，请自行继续前往下一阶段。"
                   : "三件装备分别提供核心联动、体系补强与转型机会。"}
           </p>
         </div>
@@ -2590,9 +2604,9 @@ function GearShop({ run, stock, purchased, onBuy, onContinue, onQuit }) {
               ? "五个装备栏已全部装满"
               : `当前金币 ◈ ${run.gold}`}
         </span>
-        {!purchased && !full && !noAffordable && (
+        {!purchased && (
           <button className="skip-gear" onClick={onContinue}>
-            不购买，保留金币 →
+            {full ? "继续前进 →" : "跳过购买，保留金币 →"}
           </button>
         )}
       </div>
