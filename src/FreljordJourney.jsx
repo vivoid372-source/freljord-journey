@@ -980,6 +980,15 @@ const augments = [
   { id: "shieldBash", name: "盾击", rarity: "黄金", icon: "⬡", champions: ["tahmkench"], text: "获得护盾时，下一次普攻附加护盾值40%的伤害。" },
 ];
 
+const seededRewardScore = (id, seed) => {
+  let hash = seed >>> 0;
+  for (let i = 0; i < id.length; i += 1) {
+    hash = Math.imul(hash ^ id.charCodeAt(i), 2654435761) >>> 0;
+  }
+  hash ^= hash >>> 16;
+  return hash >>> 0;
+};
+
 const defaultRun = (championId = "cho") => {
   const champion = championRoster[championId];
   let jinxQKept = false;
@@ -1009,6 +1018,7 @@ const defaultRun = (championId = "cho") => {
     upgrades: { attack: 0, q: 0, w: 0, e: 0, r: 0 },
     shopRoll: 0,
     lastShopStock: [],
+    rewardSeed: Math.floor(Math.random() * 0x7fffffff),
     node: 0,
   };
 };
@@ -2737,7 +2747,11 @@ function Rest({ run, onChoose, onQuit }) {
     { id: "penetration", icon: "➶", name: "破冰锋刃", text: `永久获得 ${[2, 3, 4][chapter - 1]} 点穿甲` },
   ];
   const choices = [...pools]
-    .sort((a, b) => ((a.id.charCodeAt(0) + run.node * 17) % 31) - ((b.id.charCodeAt(0) + run.node * 17) % 31))
+    .sort(
+      (a, b) =>
+        seededRewardScore(`${a.id}:camp:${run.node}`, run.rewardSeed) -
+        seededRewardScore(`${b.id}:camp:${run.node}`, run.rewardSeed),
+    )
     .slice(0, 3);
   return (
     <main className="shop-shell rest-screen">
@@ -2770,8 +2784,8 @@ function Augment({ run, onChoose, onQuit }) {
   const choices = [...personal, ...universal]
     .sort(
       (a, b) =>
-        ((a.id.charCodeAt(0) + run.node) % 7) -
-        ((b.id.charCodeAt(0) + run.node) % 7),
+        seededRewardScore(`${a.id}:augment:${run.node}`, run.rewardSeed) -
+        seededRewardScore(`${b.id}:augment:${run.node}`, run.rewardSeed),
     )
     .slice(0, 3);
   return (
@@ -2839,7 +2853,7 @@ function GameRun({ championId, onQuit }) {
     const buildScore = (build) => run.gear.reduce((score, id) => score + (build.items.includes(id) ? 3 : -1), 0);
     const rankedBuilds = [...builds].sort((a, b) => buildScore(b) - buildScore(a));
     const committed = run.gear.length >= 2 ? rankedBuilds[0] : builds[run.node % builds.length];
-    const seed = run.node * 97 + run.shopRoll * 193 + run.gold * 17 + run.championId.length * 31;
+    const seed = run.rewardSeed + run.node * 97 + run.shopRoll * 193 + run.gold * 17 + run.championId.length * 31;
     const hash = (id, salt) => [...id].reduce((value, char) => (value * 33 + char.charCodeAt(0)) % 100003, seed + salt);
     const shuffled = (ids, salt) => [...ids].sort((a, b) => hash(a, salt) - hash(b, salt));
     const corePool = committed.items.filter((id) => pool.includes(id));
@@ -2855,7 +2869,7 @@ function GameRun({ championId, onQuit }) {
     take(pivotPool, 37);
     shuffled(pool, 53).forEach((id) => { if (choices.length < 3 && !choices.includes(id)) choices.push(id); });
     return choices.slice(0, 3);
-  }, [run.gear, run.node, run.championId, run.gold, run.shopRoll, run.lastShopStock]);
+  }, [run.gear, run.node, run.championId, run.gold, run.shopRoll, run.lastShopStock, run.rewardSeed]);
 
   const chooseNode = useCallback((node) => {
     if (node.type === "battle") {
