@@ -1387,11 +1387,19 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
   const skillSet = champion.skills;
   const template = enemies[enemyId];
   const chapter = route[run.node]?.chapter || 1;
-  const hpScale = [1.6, 2.8, 4.5, 4.5][chapter - 1];
-  const offenseScale = [1.12, 1.42, 1.7, 1.9][chapter - 1];
-  const sustainScale = [1.32, 2.05, 3.1, 3.4][chapter - 1];
-  const hpRankScale = template.demonBoss ? 0.86 : template.finalBoss ? 0.82 : template.boss ? 1.15 : template.elite ? 1.22 : 1;
-  const offenseRankScale = template.demonBoss ? 0.9 : template.finalBoss ? 0.78 : template.boss ? 1.02 : template.elite ? 1.1 : 1;
+  const battleNodes = route.filter((routeNode) => routeNode.type === "battle");
+  const battleIndex = route
+    .slice(0, run.node + 1)
+    .filter((routeNode) => routeNode.type === "battle").length - 1;
+  const battleProgress = battleIndex / Math.max(1, battleNodes.length - 1);
+
+  // Opening fights teach the deck; the back half checks whether the build has come together.
+  // Power now curves upward by battle instead of jumping sharply at chapter boundaries.
+  const hpScale = 0.7 + Math.pow(battleProgress, 1.55) * 4.42;
+  const offenseScale = 0.7 + Math.pow(battleProgress, 1.35) * 1.15;
+  const sustainScale = 0.75 + Math.pow(battleProgress, 1.5) * 2.55;
+  const hpRankScale = template.demonBoss ? 0.86 : template.finalBoss ? 0.82 : template.boss ? 1.08 : template.elite ? 1.12 : 1;
+  const offenseRankScale = template.demonBoss ? 0.9 : template.finalBoss ? 0.8 : template.boss ? 1 : template.elite ? 1.05 : 1;
   const scaleAction = (action) => {
     const scaled = {
       ...action,
