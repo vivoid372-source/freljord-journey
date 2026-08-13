@@ -2795,7 +2795,7 @@ function GameRun({ championId, onQuit }) {
   const winBattle = (hero, enemy) => {
     setRun((r) => {
       const amp = r.gear.includes("visage") ? 1.5 : 1;
-      const recoveryRatio = 0.15 + (r.gear.includes("warmog") ? 0.18 : 0);
+      const recoveryRatio = r.gear.includes("warmog") ? 0.18 : 0;
       const recoveredHero = { ...hero, hp: Math.min(hero.maxHp, hero.hp + Math.round(hero.maxHp * recoveryRatio * amp)) };
       return { ...r, hero: recoveredHero, gold: r.gold + enemy.gold };
     });
