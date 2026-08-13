@@ -151,7 +151,7 @@ const championRoster = {
         typeName: "终极技能",
         cost: 2,
         icon: "◆",
-        text: "根据流血层数造成高额伤害；斩杀返还能量。",
+        text: "根据流血层数造成高额伤害；满层流血时，打出后立即将这张 R 返回手牌。",
       },
     },
   },
@@ -541,7 +541,7 @@ const equipment = {
   despair: { id: "despair", name: "无终恨意", price: 30, image: "/game-icons/despair.png", hp: 20, tags: ["护盾", "恢复", "生命"], routes: ["tahm_tank", "tahm_shield"], text: "护盾被消耗后，对敌人造成消耗量 50% 的伤害并恢复等量生命。" },
   moonstone: { id: "moonstone", name: "月石再生器", price: 26, image: "/game-icons/moonstone.png", ap: 4, hp: 10, tags: ["护盾", "恢复"], routes: ["tahm_shield"], text: "厚实表皮的护盾提高 35%，获得护盾时恢复其数值 20% 的生命。" },
   dawncore: { id: "dawncore", name: "黎明核心", price: 34, image: "/game-icons/dawncore.png", ap: 6, tags: ["护盾", "法强"], routes: ["tahm_shield", "tahm_ap"], text: "每持有一件护盾装备，厚实表皮护盾与AP提高 8%。" },
-  trinity: { id: "trinity", name: "三相之力", price: 31, image: "/game-icons/trinity.svg", ad: 4, hp: 10, tags: ["战士", "连招", "普攻"], text: "每回合第一次打出技能后，为下一张 A 充能；该 A 的基础伤害增加 6 + AD×0.7。" },
+  trinity: { id: "trinity", name: "三相之力", price: 31, image: "/game-icons/trinity.png", ad: 4, hp: 10, tags: ["战士", "连招", "普攻"], text: "每回合第一次打出技能后，为下一张 A 充能；该 A 的基础伤害增加 6 + AD×0.7。" },
   guinsoo: { id: "guinsoo", name: "鬼索的狂暴之刃", price: 29, image: "/game-icons/guinsoo.svg", ad: 3, ap: 3, tags: ["普攻", "连击"], text: "每第 3 张 A 的基础伤害增加 8 + AD×0.5，普攻计数跨回合保留。" },
   cosmic: { id: "cosmic", name: "宇宙驱动", price: 28, image: "/game-icons/cosmic.svg", ap: 6, hp: 8, tags: ["法强", "抽牌", "技能"], text: "每回合打出的第 2 张技能牌额外抽 1 张牌；每回合触发一次。" },
   horizon: { id: "horizon", name: "视界专注", price: 30, image: "/game-icons/horizon.svg", ap: 7, tags: ["法强", "预判", "技能"], text: "敌人显示危险或蓄力意图时，Q 与 W 的总伤害提高 25%。" },
@@ -1303,8 +1303,10 @@ function Map({ run, onChoose, onQuit }) {
         <div
           className="route-hero-walker"
           style={{
-            "--walker-from": `${5 + (Math.max(0, currentChapterIndex - 1) / Math.max(1, chapterNodes.length - 1)) * 90}%`,
-            "--walker-to": `${5 + (currentChapterIndex / Math.max(1, chapterNodes.length - 1)) * 90}%`,
+            "--walker-from-x": `${5 + (Math.max(0, currentChapterIndex - 1) / Math.max(1, chapterNodes.length - 1)) * 90}%`,
+            "--walker-to-x": `${5 + (currentChapterIndex / Math.max(1, chapterNodes.length - 1)) * 90}%`,
+            "--walker-from-y": `${90 - (Math.max(0, currentChapterIndex - 1) / Math.max(1, chapterNodes.length - 1)) * 80}%`,
+            "--walker-to-y": `${90 - (currentChapterIndex / Math.max(1, chapterNodes.length - 1)) * 80}%`,
           }}
           aria-label={`${championRoster[run.championId].name}正在前往${current?.title}`}
         >
@@ -1314,6 +1316,7 @@ function Map({ run, onChoose, onQuit }) {
           <div
             key={`${node.index}-${node.title}`}
             className={`route-node ${node.index < run.node ? "done" : ""} ${node.index === run.node ? "current" : ""} ${node.chapterBoss || node.finalBoss ? "boss-node" : ""}`}
+            style={{ "--route-order": chapterNodes.length - node.index }}
           >
             <span className="route-index">{node.index + 1}</span>
             <strong>{node.icon}</strong>
@@ -1586,7 +1589,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         return `立即造成 ${previewDamage(id, hero.ad + 8 + level * 4, { isBasicAttack: true, bleed: nextBleed })} 点强化普攻伤害，流血 ${foe.bleed}/${bleedCap} → ${nextBleed}/${bleedCap}。`;
       }
       if (id === "e") return `打断「${intent.name}」；敌人改用普通攻击。`;
-      return `造成 ${previewDamage(id, Math.round(12 + hero.ad + foe.bleed * 6 + level * 5))} 点伤害（${foe.bleed}层流血）。斩杀返还2能量。`;
+      return `造成 ${previewDamage(id, Math.round(12 + hero.ad + foe.bleed * 6 + level * 5))} 点伤害（${foe.bleed}层流血）${foe.bleed >= bleedCap ? "，打出后立即将这张 R 返回手牌" : ""}。`;
     }
     if (champion.id === "twistedfate") {
       if (id === "attack") {
@@ -1725,8 +1728,6 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       }
       if (id === "r") {
         damage = Math.round(12 + h.ad + f.bleed * 6 + level * 5);
-        if (damage >= f.hp + f.shield)
-          h.energy = Math.min(h.maxEnergy, h.energy + 2);
       }
     }
     if (champion.id === "twistedfate") {
@@ -2119,8 +2120,13 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     ) {
       message += " 盛宴斩杀了非英雄单位，本次不获得永久生命。";
     }
+    const returnsDariusUltimate = champion.id === "darius" && id === "r" && f.bleed >= bleedCap;
     let nextHand = hand.filter((_, i) => i !== index);
-    let nextDiscard = [...discard, id];
+    let nextDiscard = returnsDariusUltimate ? [...discard] : [...discard, id];
+    if (returnsDariusUltimate) {
+      nextHand.push("r");
+      message += " 满层流血使诺克萨斯断头台立即返回手牌。";
+    }
     if (h.destinyDraw) {
       const extra = draw(pile, nextDiscard, Math.min(h.destinyDraw, 8 - nextHand.length));
       nextHand = [...nextHand, ...extra.cards];
