@@ -1206,7 +1206,7 @@ function Lobby({ onBack, onStart, standalone = false }) {
   );
 }
 
-function Header({ run, onQuit, label }) {
+function Header({ run, onQuit, label, showAugments = true }) {
   const chapter = route[Math.min(run.node, route.length - 1)]?.chapter || 1;
   return (
     <>
@@ -1228,7 +1228,7 @@ function Header({ run, onQuit, label }) {
           </span>
         </div>
       </header>
-      {label !== "冰原路线" && run.augments.length > 0 && (
+      {showAugments && label !== "冰原路线" && run.augments.length > 0 && (
         <AugmentBar owned={run.augments} />
       )}
     </>
@@ -1313,7 +1313,7 @@ function Map({ run, onChoose, onQuit }) {
   }, [current, onChoose]);
   return (
     <main className={`map-shell transition-map ${current?.chapter === 4 ? "final-challenge-map" : ""}`}>
-      <Header run={run} onQuit={onQuit} label="旅程推进" />
+      <Header run={run} onQuit={onQuit} label="旅程推进" showAugments={false} />
       <section className="map-heading">
         <div className="eyebrow">CHAPTER {current?.chapter}</div>
         <h1>{chapterNames[(current?.chapter || 1) - 1]}</h1>
