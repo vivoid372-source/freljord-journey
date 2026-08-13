@@ -2919,6 +2919,53 @@ button {
 
 /* 英雄选择：只保留核心玩法与关键机制 */
 .compact-mechanic-guide { margin-bottom: 14px; }
+.card-choice-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 7, 13, 0.78);
+  backdrop-filter: blur(8px);
+}
+.card-choice-panel {
+  width: min(680px, 94vw);
+  padding: 24px;
+  text-align: center;
+  border: 1px solid rgba(126, 218, 237, 0.38);
+  background: linear-gradient(150deg, rgba(12, 38, 52, 0.98), rgba(3, 13, 22, 0.99));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.68), inset 0 0 28px rgba(100, 213, 235, 0.06);
+}
+.card-choice-panel > small { color: #8ddcec; letter-spacing: 0.18em; }
+.card-choice-panel h2 { margin: 7px 0 18px; font: 25px Georgia, serif; }
+.pick-a-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.pick-a-card-grid button {
+  min-height: 148px;
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #edfaff;
+  border: 1px solid currentColor;
+  cursor: pointer;
+}
+.pick-a-card-grid button:hover { transform: translateY(-5px); filter: brightness(1.18); }
+.pick-a-card-grid b { font: 22px Georgia, serif; }
+.pick-a-card-grid span { font-size: 10px; line-height: 1.55; }
+.pick-blue { color: #80dcff !important; background: linear-gradient(145deg, #164e72, #092234); }
+.pick-red { color: #ff9b91 !important; background: linear-gradient(145deg, #712b31, #2f111b); }
+.pick-gold { color: #ffe089 !important; background: linear-gradient(145deg, #72531b, #2d2009); }
+.cancel-card-choice {
+  margin-top: 16px;
+  padding: 8px 24px;
+  color: #91aab5;
+  border: 1px solid #344f5e;
+  background: transparent;
+  cursor: pointer;
+}
 @media (max-width: 600px) {
   .standalone-journey .journey-header { padding-top: 30px; }
   .standalone-journey .journey-header h1 { font-size: 34px; }
@@ -2933,6 +2980,11 @@ button {
   .compact-mechanic-guide p { font-size: 9px; line-height: 1.45; }
   .hero-detail-layout .run-stats { margin: 10px 0; }
   .hero-detail-layout .start-button { margin-top: 8px; }
+  .card-choice-panel { padding: 18px 12px; }
+  .pick-a-card-grid { gap: 7px; }
+  .pick-a-card-grid button { min-height: 132px; padding: 12px 7px; }
+  .pick-a-card-grid b { font-size: 18px; }
+  .pick-a-card-grid span { font-size: 8px; }
 }
 
 /* 最终覆盖：装备商店不允许横向滑动 */

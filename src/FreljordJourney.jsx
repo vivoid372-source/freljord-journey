@@ -197,7 +197,7 @@ const championRoster = {
         typeName: "技能",
         cost: 1,
         icon: "▣",
-        text: "依次选定蓝、红、金牌，将下一张普通攻击替换为所选牌。",
+        text: "从蓝、红、金牌中选择一张，将下一张普通攻击替换为所选牌。",
       },
       e: {
         id: "e",
@@ -376,7 +376,7 @@ const championBuilds = {
 const championGuides = {
   cho: { loop: "用Q眩晕跳过敌方回合，W打断危险行动，E强化普攻压低血线，最后用R盛宴斩杀成长。", control: "Q是眩晕：敌人无法行动；W是打断：敌人仍会改用普攻。", warning: "盛宴必须进入卡牌显示的斩杀线；每次斩杀英雄单位永久增加8点最大生命且无上限，并强化心之钢、九头蛇与裂隙制造者。" },
   darius: { loop: "用普攻和W快速叠流血，Q维持续航，满层后以R打出最高爆发。", control: "E只打断特殊行动，敌人随后改用普攻；它不会让敌人跳过回合。", warning: "流血在敌方回合结束时造成伤害；暴击流依靠可见的暴击蓄积，不是随机赌运气。" },
-  twistedfate: { loop: "W按蓝→红→金循环选牌，并将下一张A替换成所选牌；蓝牌回能、红牌爆发、金牌眩晕，R标记后用Q爆发。", control: "金牌才是眩晕。普通怪需1点、精英与BOSS需2点韧性压力。", warning: "W不造成伤害；选牌后必须用A打出，结算后恢复普通攻击。R会抽牌并让下一张Q提高50%伤害。" },
+  twistedfate: { loop: "打出W后三选一：蓝牌回能、红牌增伤、金牌控制；所选牌由下一张A触发。R标记后接Q爆发。", control: "金牌可直接选择。普通怪命中即眩晕；精英与BOSS需要累计2点韧性压力。", warning: "W不造成伤害；选牌后必须用A打出，结算后恢复普通攻击。R会抽牌并让下一张Q提高50%伤害。" },
   jinx: { loop: "机枪连续普攻叠至3层后开始抽牌循环；需要爆发时用Q切换火箭，W与R负责远程收割。", control: "E嚼火者是眩晕：敌人本回合完全无法行动；赛瑞尔达强化的W只是打断。", warning: "金克斯牌组只保留1张切枪Q，其余替换为A普攻；机枪抽牌每回合有上限，破败与饮血剑提供续航。" },
   tahmkench: { loop: "普攻叠3层品味；满层Q消耗品味并眩晕，E把累计受伤转为护盾，R用于残血收割。", control: "只有满3层品味的Q是真正眩晕；W只是打断，敌人会改用普攻。", warning: "3层品味只让R伤害提高35%，不会直接处决；BOSS的吞噬斩杀线更低。" },
 };
@@ -1401,7 +1401,6 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     burn: 0,
     drained: 0,
     empowered: false,
-    cardCycle: "蓝牌",
     selectedCard: null,
     trickCharges: 0,
     weapon: "机枪",
@@ -1447,6 +1446,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
   ]);
   const [locked, setLocked] = useState(false);
   const [damagePopup, setDamagePopup] = useState(null);
+  const [cardChoice, setCardChoice] = useState(null);
   const intent = base.actions[foe.turn % base.actions.length];
   const nextIntent = base.actions[(foe.turn + 1) % base.actions.length];
   const heartsteelReady =
@@ -1554,7 +1554,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (id === "q")
         return `造成 ${previewDamage(id, Math.round((9 + level * 4 + hero.ap) * (foe.marked ? 1.5 : 1)))} 点伤害${foe.marked ? "并消耗命运标记" : ""}。`;
       if (id === "w")
-        return `选定${hero.cardCycle}并替换下一张A：${hero.cardCycle === "蓝牌" ? "命中后恢复2能量" : hero.cardCycle === "红牌" ? "命中时造成额外魔法伤害" : "命中时眩晕敌人"}。`;
+        return "三选一：蓝牌恢复2能量、红牌额外造成伤害、金牌施加眩晕；所选牌替换下一张A。";
       if (id === "e") return `获得 ${2 + Math.floor(level / 2)} 层卡牌骗术，后续每次普攻附加 ${Math.round(4 + hero.ap * 0.45)} 点伤害。`;
       return `造成 ${previewDamage(id, Math.round(5 + hero.ap * 0.4 + level * 2))} 点伤害，标记敌人并使下一次万能牌伤害提高50%，抽2张牌。`;
     }
@@ -1636,7 +1636,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     };
   };
 
-  const play = (id, index) => {
+  const play = (id, index, chosenCard = null) => {
     const actualCost =
       id === "q" && run.augments.includes("quickRupture")
         ? Math.max(0, skillSet[id].cost - 1)
@@ -1709,13 +1709,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       }
       if (id === "w") {
         h.empowered = true;
-        h.selectedCard = h.cardCycle;
-        h.cardCycle =
-          h.cardCycle === "蓝牌"
-            ? "红牌"
-            : h.cardCycle === "红牌"
-              ? "金牌"
-              : "蓝牌";
+        h.selectedCard = chosenCard;
         message = `选中${h.selectedCard}，下一张A将替换为${h.selectedCard}。`;
       }
       if (id === "e") {
@@ -2257,7 +2251,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
           </div>
           <div className="unit-stats">
             <span>⬡ 护盾 {hero.shield}</span>
-            {champion.id === "twistedfate" && <span>▣ {hero.empowered ? `下一张A：${hero.selectedCard}` : `W待选：${hero.cardCycle}`}</span>}
+            {champion.id === "twistedfate" && <span>▣ {hero.empowered ? `下一张A：${hero.selectedCard}` : "W：蓝 / 红 / 金三选一"}</span>}
             {champion.id === "jinx" && <span>⇄ {hero.weapon} · 连击 {hero.minigun}</span>}
             {hero.crit > 0 && <span>✹ 暴击 {hero.crit}% · 蓄积 {hero.critMeter}/100</span>}
             {hero.armorPen > 0 && <span>➶ 穿甲 {hero.armorPen}</span>}
@@ -2330,7 +2324,10 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               level={run.upgrades[id]}
               cost={id === "q" && run.augments.includes("quickRupture") ? Math.max(0, skillSet[id].cost - 1) : skillSet[id].cost}
               disabled={hero.energy < (id === "q" && run.augments.includes("quickRupture") ? Math.max(0, skillSet[id].cost - 1) : skillSet[id].cost)}
-              onClick={() => play(id, i)}
+              onClick={() => {
+                if (champion.id === "twistedfate" && id === "w") setCardChoice({ index: i });
+                else play(id, i);
+              }}
             />
           ))}
         </div>
@@ -2348,6 +2345,26 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
           </button>
         </div>
       </section>
+      {cardChoice && (
+        <div className="card-choice-overlay" role="dialog" aria-modal="true" aria-label="选择卡牌大师的牌">
+          <div className="card-choice-panel">
+            <small>W · 选牌</small>
+            <h2>选择下一张飞牌</h2>
+            <div className="pick-a-card-grid">
+              <button className="pick-blue" onClick={() => { play("w", cardChoice.index, "蓝牌"); setCardChoice(null); }}>
+                <b>蓝牌</b><span>下一张A命中后恢复 2 能量</span>
+              </button>
+              <button className="pick-red" onClick={() => { play("w", cardChoice.index, "红牌"); setCardChoice(null); }}>
+                <b>红牌</b><span>下一张A额外造成 {Math.round((7 + hero.ap * 0.55) * HERO_DAMAGE_SCALE)} 点伤害</span>
+              </button>
+              <button className="pick-gold" onClick={() => { play("w", cardChoice.index, "金牌"); setCardChoice(null); }}>
+                <b>金牌</b><span>下一张A施加眩晕；精英/BOSS需 2 次</span>
+              </button>
+            </div>
+            <button className="cancel-card-choice" onClick={() => setCardChoice(null)}>取消</button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
