@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./freljord.css";
 
 const skills = {
@@ -1039,6 +1039,45 @@ function Home({ onEnter }) {
   );
 }
 
+function FrozenIntro({ onComplete }) {
+  const [leaving, setLeaving] = useState(false);
+  const finish = useCallback(() => {
+    if (leaving) return;
+    setLeaving(true);
+    window.setTimeout(onComplete, 650);
+  }, [leaving, onComplete]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(finish, 3600);
+    return () => window.clearTimeout(timer);
+  }, [finish]);
+
+  return (
+    <main
+      className={`frozen-intro ${leaving ? "is-leaving" : ""}`}
+      onClick={finish}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") finish();
+      }}
+      aria-label="跳过弗雷尔卓德开场动画"
+    >
+      <div className="intro-aurora" aria-hidden="true" />
+      <div className="intro-snow" aria-hidden="true" />
+      <div className="intro-frost intro-frost-left" aria-hidden="true" />
+      <div className="intro-frost intro-frost-right" aria-hidden="true" />
+      <div className="intro-ice-seal" aria-hidden="true"><span>ᚠ</span></div>
+      <div className="intro-title">
+        <small>THE FRELJORD AWAITS</small>
+        <h1>弗雷尔卓德</h1>
+        <p>寒冰封境，远征者苏醒</p>
+      </div>
+      <span className="intro-skip">点击任意位置跳过</span>
+    </main>
+  );
+}
+
 function Lobby({ onBack, onStart, standalone = false }) {
   const [selected, setSelected] = useState("cho");
   const champion = championRoster[selected];
@@ -1286,11 +1325,26 @@ function Map({ run, onChoose, onQuit }) {
   );
 }
 
+function shuffleDeck(cards) {
+  const shuffled = [...cards];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  for (let i = 3; i < shuffled.length; i += 1) {
+    const fourAttacks = shuffled.slice(i - 3, i + 1).every((card) => card === "attack");
+    if (!fourAttacks) continue;
+    const nextSkill = shuffled.findIndex((card, index) => index > i && card !== "attack");
+    if (nextSkill !== -1) [shuffled[i], shuffled[nextSkill]] = [shuffled[nextSkill], shuffled[i]];
+  }
+  return shuffled;
+}
+
 function draw(pile, discard, count) {
   let p = [...pile],
     d = [...discard];
   if (p.length < count) {
-    p = [...p, ...d].sort(() => Math.random() - 0.5);
+    p = [...p, ...shuffleDeck(d)];
     d = [];
   }
   return { cards: p.slice(0, count), pile: p.slice(count), discard: d };
@@ -1328,8 +1382,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     gold: Math.round(template.gold * (1 + (chapter - 1) * 0.38)),
     actions: template.actions.map(scaleAction),
   };
-  const cut = run.node % run.deck.length;
-  const deck = [...run.deck.slice(cut), ...run.deck.slice(0, cut)];
+  const deck = useMemo(() => shuffleDeck(run.deck), [run.deck]);
   const bonusLife = run.hero.maxHp - champion.hp;
   let combatAp =
     run.hero.ap +
@@ -2126,7 +2179,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       h.jakshoUsed = true;
       message += ` 贾修提供 ${shield} 点护盾。`;
     }
-    const drawCount = Math.max(0, Math.min(3, 8 - hand.length));
+    const drawCount = Math.max(0, Math.min(4, 8 - hand.length));
     const result = draw(pile, discard, drawCount);
     const retainedHand = [...hand, ...result.cards];
     h.energy = Math.max(1, h.maxEnergy - h.drained);
@@ -2297,6 +2350,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
             />
           ))}
         </div>
+        <span className="swipe-card-hint">↑ 上滑卡牌 · 发光后释放打出</span>
         <div className="turn-controls">
           <div className="energy-orb">
             <b>{hero.energy}</b>
@@ -2332,12 +2386,45 @@ function SkillCard({
   onClick,
   cost = skill.cost,
 }) {
+  const startY = useRef(null);
+  const dragged = useRef(false);
+  const [lift, setLift] = useState(0);
+  const ready = lift <= -58;
+  const resetDrag = () => {
+    startY.current = null;
+    window.setTimeout(() => {
+      dragged.current = false;
+      setLift(0);
+    }, 0);
+  };
+
   return (
     <button
       disabled={disabled}
-      onClick={onClick}
-      className={`game-card type-${skill.type} ${disabled ? "disabled" : ""}`}
+      onClick={() => {
+        if (!dragged.current) onClick();
+      }}
+      onPointerDown={(event) => {
+        if (disabled) return;
+        startY.current = event.clientY;
+        dragged.current = false;
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }}
+      onPointerMove={(event) => {
+        if (startY.current === null || disabled) return;
+        const distance = Math.min(0, event.clientY - startY.current);
+        if (distance < -6) dragged.current = true;
+        setLift(Math.max(-82, distance));
+      }}
+      onPointerUp={() => {
+        if (ready && !disabled) onClick();
+        resetDrag();
+      }}
+      onPointerCancel={resetDrag}
+      style={{ "--card-lift": `${lift}px` }}
+      className={`game-card type-${skill.type} ${disabled ? "disabled" : ""} ${lift < 0 ? "is-dragging" : ""} ${ready ? "swipe-ready" : ""}`}
     >
+      <span className="swipe-release">释放打出</span>
       <span className="card-cost">{cost}</span>
       <span className="skill-key">{skill.key}</span>
       <span className="card-icon">{skill.icon}</span>
@@ -2718,8 +2805,9 @@ function GameRun({ championId, onQuit }) {
 }
 
 export default function App({ standalone = false }) {
-  const [screen, setScreen] = useState(standalone ? "journey" : "home");
+  const [screen, setScreen] = useState(standalone ? "intro" : "home");
   const [championId, setChampionId] = useState("cho");
+  if (screen === "intro") return <FrozenIntro onComplete={() => setScreen("journey")} />;
   if (screen === "journey")
     return (
       <Lobby
