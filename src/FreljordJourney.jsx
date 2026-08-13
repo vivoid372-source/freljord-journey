@@ -106,7 +106,7 @@ const championRoster = {
     color: "#b44747",
     mechanic: "五层流血",
     description: "普攻与技能叠加流血，满层后用断头台收割。",
-    builds: ["征战战士", "血怒流血", "暴击断头台"],
+    builds: ["征战战士", "血怒流血", "暴击断头台", "无限断头台"],
     preferredTags: ["普攻", "持续", "生命"],
     skills: {
       attack: {
@@ -346,6 +346,7 @@ const championBuilds = {
     { id: "darius_fighter", name: "征战战士", items: ["cleaver", "shojin", "sterak", "deathdance", "titanic", "trinity", "hexplate"] },
     { id: "darius_bleed", name: "血怒流血", items: ["cleaver", "titanic", "sterak", "shojin", "collector"] },
     { id: "darius_crit", name: "暴击断头台", items: ["collector", "essence", "infinity", "phantom", "deathdance"] },
+    { id: "darius_infinite_r", name: "无限断头台", items: ["shojin", "hexplate", "axiom", "cleaver", "deathdance"] },
   ],
   jinx: [
     { id: "jinx_draw", name: "无限机枪", items: ["bork", "phantom", "kraken", "essence", "bloodthirster", "guinsoo", "trinity"] },
@@ -371,7 +372,7 @@ const championBuilds = {
 
 const championGuides = {
   cho: { loop: "用Q眩晕跳过敌方回合，W打断危险行动，E强化普攻压低血线，最后用R盛宴斩杀成长。", control: "Q是眩晕：敌人无法行动；W是打断：敌人仍会改用普攻。", warning: "盛宴必须进入卡牌显示的斩杀线；每次斩杀英雄单位永久增加8点最大生命且无上限，并强化心之钢、九头蛇与裂隙制造者。" },
-  darius: { loop: "用普攻和W快速叠流血，Q维持续航，满层后以R打出最高爆发。", control: "E只打断特殊行动，敌人随后改用普攻；它不会让敌人跳过回合。", warning: "流血在敌方回合结束时造成伤害；暴击流依靠可见的暴击蓄积，不是随机赌运气。" },
+  darius: { loop: "用普攻和W快速叠流血，Q维持续航，满层后以R打出最高爆发。", control: "E只打断特殊行动，敌人随后改用普攻；它不会让敌人跳过回合。", warning: "集齐朔极之矛、实验性海克斯板甲和公理圆弧后，满层流血可让R回手并返还2能量，形成无限断头台。" },
   twistedfate: { loop: "打出W后三选一：蓝牌回能、红牌增伤、金牌控制；所选牌由下一张A触发。R标记后接Q爆发。", control: "金牌可直接选择。普通怪命中即眩晕；精英与BOSS需要累计2点韧性压力。", warning: "W不造成伤害；选牌后必须用A打出，结算后恢复普通攻击。R会抽牌并让下一张Q提高50%伤害。" },
   jinx: { loop: "机枪连续普攻叠至3层后开始抽牌循环；需要爆发时用Q切换火箭，W与R负责远程收割。", control: "E嚼火者是眩晕：敌人本回合完全无法行动；赛瑞尔达强化的W只是打断。", warning: "金克斯牌组只保留1张切枪Q，其余替换为A普攻；机枪抽牌每回合有上限，破败与饮血剑提供续航。" },
   tahmkench: { loop: "普攻叠3层品味；满层Q消耗品味并眩晕，E把累计受伤转为护盾，R用于残血收割。", control: "只有满3层品味的Q是真正眩晕；W只是打断，敌人会改用普攻。", warning: "3层品味只让R伤害提高35%，不会直接处决；BOSS的吞噬斩杀线更低。" },
@@ -524,7 +525,7 @@ const equipment = {
     text: "每场战斗第一次受到伤害时完全抵消；随后为巫妖之祸充能。",
   },
   cleaver: { id: "cleaver", name: "黑色切割者", price: 27, image: "/game-icons/cleaver.png", ad: 3, hp: 12, tags: ["战士", "流血"], routes: ["darius_fighter", "darius_bleed"], text: "每层流血使诺手造成的伤害提高 3%；满层额外提高 10%。" },
-  shojin: { id: "shojin", name: "朔极之矛", price: 31, image: "/game-icons/shojin.png", ad: 4, hp: 10, tags: ["战士", "技能"], routes: ["darius_fighter"], text: "每施放 2 张技能牌，抽 1 张牌；每回合最多 2 次。" },
+  shojin: { id: "shojin", name: "朔极之矛", price: 31, image: "/game-icons/shojin.png", ad: 4, hp: 10, tags: ["战士", "技能", "抽牌"], routes: ["darius_fighter", "darius_infinite_r"], text: "每打出 1 张技能牌，立即抽 1 张牌；手牌达到8张时不再抽取。" },
   sterak: { id: "sterak", name: "斯特拉克的挑战护手", price: 30, image: "/game-icons/sterak.png", ad: 3, hp: 18, tags: ["战士", "护盾"], routes: ["darius_fighter", "tahm_shield"], text: "每场首次生命低于 40% 时，获得最大生命 25% 的护盾。" },
   deathdance: { id: "deathdance", name: "死亡之舞", price: 29, image: "/game-icons/deathdance.png", ad: 4, tags: ["战士", "续航"], routes: ["darius_fighter"], text: "终极技能斩杀时恢复 16% 最大生命，并清除敌人的攻击强化。" },
   collector: { id: "collector", name: "收集者", price: 30, image: "/game-icons/collector.png", ad: 4, crit: 18, armorPen: 3, tags: ["暴击", "穿甲", "终结"], routes: ["darius_crit", "jinx_crit", "jinx_poke"], text: "伤害可暴击；敌人生命低于 8% 时直接处决。" },
@@ -537,7 +538,7 @@ const equipment = {
   manamune: { id: "manamune", name: "魔宗", price: 26, image: "/game-icons/manamune.png", ad: 3, tags: ["穿甲", "施法"], routes: ["jinx_poke"], text: "W 与 R 额外造成 4×当前能量的伤害；每场第 3 次施法后再抽 1 张。" },
   youmuu: { id: "youmuu", name: "幽梦之灵", price: 27, image: "/game-icons/youmuu.png", ad: 5, armorPen: 5, tags: ["穿甲", "爆发"], routes: ["jinx_poke"], text: "每回合第一张 W 或 R 额外造成 8 点伤害。" },
   serylda: { id: "serylda", name: "赛瑞尔达的怨恨", price: 31, image: "/game-icons/serylda.png", ad: 4, armorPen: 7, tags: ["穿甲", "控制"], routes: ["jinx_poke"], text: "W 能打断危险行动；W 与 R 无视 7 点护盾并获得穿甲增伤。" },
-  axiom: { id: "axiom", name: "公理圆弧", price: 32, image: "/game-icons/axiom.png", ad: 5, armorPen: 4, tags: ["穿甲", "终结"], routes: ["jinx_poke"], text: "R 每场首次使用后，将一张 R 洗回抽牌堆顶部。" },
+  axiom: { id: "axiom", name: "公理圆弧", price: 32, image: "/game-icons/axiom.png", ad: 5, armorPen: 4, tags: ["穿甲", "终结", "能量"], routes: ["jinx_poke", "darius_infinite_r"], text: "每次打出 R 后恢复 1 能量；金克斯每场首次打出 R 时，额外将一张 R 返回手牌。" },
   fimbulwinter: { id: "fimbulwinter", name: "末日寒冬", price: 28, image: "/game-icons/fimbulwinter.png", hp: 18, tags: ["护盾", "控制"], routes: ["tahm_shield"], text: "Q 或 W 打断敌人时获得最大生命 10% 护盾。" },
   despair: { id: "despair", name: "无终恨意", price: 30, image: "/game-icons/despair.png", hp: 20, tags: ["护盾", "恢复", "生命"], routes: ["tahm_tank", "tahm_shield"], text: "护盾被消耗后，对敌人造成消耗量 50% 的伤害并恢复等量生命。" },
   moonstone: { id: "moonstone", name: "月石再生器", price: 26, image: "/game-icons/moonstone.png", ap: 4, hp: 10, tags: ["护盾", "恢复"], routes: ["tahm_shield"], text: "厚实表皮的护盾提高 35%，获得护盾时恢复其数值 20% 的生命。" },
@@ -546,7 +547,7 @@ const equipment = {
   guinsoo: { id: "guinsoo", name: "鬼索的狂暴之刃", price: 29, image: "/game-icons/guinsoo.svg", ad: 3, ap: 3, tags: ["普攻", "连击"], text: "每第 3 张 A 的基础伤害增加 8 + AD×0.5，普攻计数跨回合保留。" },
   cosmic: { id: "cosmic", name: "宇宙驱动", price: 28, image: "/game-icons/cosmic.svg", ap: 6, hp: 8, tags: ["法强", "抽牌", "技能"], text: "每回合打出的第 2 张技能牌额外抽 1 张牌；每回合触发一次。" },
   horizon: { id: "horizon", name: "视界专注", price: 30, image: "/game-icons/horizon.svg", ap: 7, tags: ["法强", "预判", "技能"], text: "敌人显示危险或蓄力意图时，Q 与 W 的总伤害提高 25%。" },
-  hexplate: { id: "hexplate", name: "实验性海克斯板甲", price: 32, image: "/game-icons/hexplate.svg", ad: 4, hp: 10, tags: ["终极技能", "能量", "抽牌"], text: "每场战斗第一次打出 R 后恢复 2 能量并抽 1 张牌。" },
+  hexplate: { id: "hexplate", name: "实验性海克斯板甲", price: 32, image: "/game-icons/hexplate.svg", ad: 4, hp: 10, tags: ["终极技能", "能量", "抽牌"], routes: ["darius_fighter", "darius_infinite_r", "jinx_poke", "tf_burst"], text: "每次打出 R 后恢复 1 能量；每场战斗首次触发时额外抽 1 张牌。" },
   frozenheart: { id: "frozenheart", name: "冰霜之心", price: 27, image: "/game-icons/frozenheart.svg", hp: 16, tags: ["生命", "护盾", "技能"], text: "每回合第一次打出 E，恢复 1 能量并获得最大生命 8% 的护盾。" },
 };
 
@@ -1306,8 +1307,9 @@ function Map({ run, onChoose, onQuit }) {
           style={{
             "--walker-from-x": `${5 + (Math.max(0, currentChapterIndex - 1) / Math.max(1, chapterNodes.length - 1)) * 90}%`,
             "--walker-to-x": `${5 + (currentChapterIndex / Math.max(1, chapterNodes.length - 1)) * 90}%`,
-            "--walker-from-y": `${90 - (Math.max(0, currentChapterIndex - 1) / Math.max(1, chapterNodes.length - 1)) * 80}%`,
-            "--walker-to-y": `${90 - (currentChapterIndex / Math.max(1, chapterNodes.length - 1)) * 80}%`,
+            "--walker-row": chapterNodes.length - currentChapterIndex,
+            "--walker-start-shift": currentChapterIndex === 0 ? "0px" : "calc(100% + 5px)",
+            "--walker-mid-shift": currentChapterIndex === 0 ? "0px" : "50%",
           }}
           aria-label={`${championRoster[run.championId].name}正在前往${current?.title}`}
         >
@@ -2003,9 +2005,20 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     if (isSpell) {
       h.spells += 1;
       h.spellsTurn += 1;
-      if (run.gear.includes("shojin")) { h.shojinCasts += 1; if (h.shojinCasts % 2 === 0 && h.drawsTurn < 2) { h.bonusDraw += 1; h.drawsTurn += 1; } }
+      if (run.gear.includes("shojin")) {
+        h.shojinCasts += 1;
+        h.bonusDraw += 1;
+        message += " 朔极之矛抽 1 张牌。";
+      }
       if (run.gear.includes("manamune") && h.spells === 3) h.bonusDraw += 1;
-      if (champion.id === "jinx" && id === "r" && run.gear.includes("axiom") && !h.axiomUsed) { h.axiomUsed = true; h.returnUltimate = true; }
+      if (id === "r" && run.gear.includes("axiom")) {
+        h.energy = Math.min(h.maxEnergy, h.energy + 1);
+        message += " 公理圆弧恢复 1 能量。";
+        if (champion.id === "jinx" && !h.axiomUsed) {
+          h.axiomUsed = true;
+          h.returnUltimate = true;
+        }
+      }
       if (run.gear.includes("lichbane") && !h.lichUsed) {
         h.lichReady = true;
         h.lichUsed = true;
@@ -2019,11 +2032,14 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         h.cosmicUsed = true;
         message += " 宇宙驱动抽 1 张牌。";
       }
-      if (id === "r" && run.gear.includes("hexplate") && !h.hexplateUsed) {
-        h.energy = Math.min(h.maxEnergy, h.energy + 2);
-        h.bonusDraw += 1;
-        h.hexplateUsed = true;
-        message += " 海克斯板甲恢复 2 能量并抽 1 张牌。";
+      if (id === "r" && run.gear.includes("hexplate")) {
+        h.energy = Math.min(h.maxEnergy, h.energy + 1);
+        message += " 海克斯板甲恢复 1 能量。";
+        if (!h.hexplateUsed) {
+          h.bonusDraw += 1;
+          h.hexplateUsed = true;
+          message += " 本场首次触发并抽 1 张牌。";
+        }
       }
       if (id === "e" && run.gear.includes("frozenheart") && !h.frozenheartUsed) {
         const shield = Math.round(h.maxHp * 0.08);

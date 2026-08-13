@@ -3737,6 +3737,7 @@ button {
     grid-template-rows: 42px 100px 38px 28px minmax(0, 1fr) 40px;
     padding: 0 10px 8px;
     overflow: hidden;
+    isolation: isolate;
   }
   .transition-map .battle-topbar {
     width: calc(100% + 20px);
@@ -3774,6 +3775,10 @@ button {
     grid-template-rows: repeat(6, minmax(0, 1fr));
     gap: 5px;
     align-items: center;
+    contain: layout paint;
+    isolation: isolate;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
   .transition-map .route-line {
     left: 25px;
@@ -3796,6 +3801,8 @@ button {
     align-items: center;
     text-align: left;
     order: var(--route-order);
+    grid-column: 1;
+    grid-row: var(--route-order);
   }
   .transition-map .route-node strong {
     grid-column: 1;
@@ -3822,17 +3829,25 @@ button {
     line-height: 1.2;
   }
   .transition-map .route-hero-walker {
-    left: 3px;
-    top: calc(var(--walker-to-y) - 21px);
+    position: relative;
+    left: auto;
+    top: auto;
+    grid-column: 1;
+    grid-row: var(--walker-row);
+    justify-self: start;
+    align-self: center;
+    margin-left: 3px;
     width: 44px;
     height: 44px;
     offset-path: none;
     animation: heroWalkMobile 2.5s ease-in-out both;
+    will-change: transform;
+    backface-visibility: hidden;
   }
   @keyframes heroWalkMobile {
-    from { top: calc(var(--walker-from-y) - 21px); transform: translateX(0) rotate(-4deg); }
-    45% { transform: translateX(8px) rotate(4deg); }
-    to { top: calc(var(--walker-to-y) - 21px); transform: translateX(0) rotate(0); }
+    from { transform: translate3d(0, var(--walker-start-shift), 0) rotate(-4deg); }
+    45% { transform: translate3d(8px, var(--walker-mid-shift), 0) rotate(4deg); }
+    to { transform: translate3d(0, 0, 0) rotate(0); }
   }
   .transition-map .auto-progress {
     height: 34px;
