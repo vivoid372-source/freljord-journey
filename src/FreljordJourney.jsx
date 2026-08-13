@@ -2332,7 +2332,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       />
       <EquipmentBar gear={run.gear} detailed />
       <section className="battlefield">
-        <div className="combatant">
+        <div className="combatant hero-combatant">
           <div className="unit-portrait cho" style={{ "--champion-color": champion.color }}>
             <img src={champion.image} alt={champion.name} />
           </div>
@@ -2382,7 +2382,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
             ))}
           </div>
           <div
-            className={`intent-card enemy-intent ${controlled ? "controlled-intent" : intent.dangerous ? "dangerous" : ""}`}
+            className={`intent-card enemy-intent desktop-enemy-intent ${controlled ? "controlled-intent" : intent.dangerous ? "dangerous" : ""}`}
           >
             <small>{foe.stunned ? "眩晕" : interrupted ? "特殊行动已打断" : intent.dangerous ? "危险意图" : "敌人意图"}</small>
             <strong>{foe.stunned ? "✕" : interrupted ? "⚔" : intent.icon}</strong>
@@ -2390,7 +2390,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
             <span>{foe.stunned ? `本回合无法行动。下回合：${nextIntent.name}（${nextIntent.text}）` : interrupted ? `「${intent.name}」已取消，本回合改用基础攻击。` : intent.text}</span>
           </div>
         </div>
-        <div className="combatant">
+        <div className="combatant enemy-combatant">
           <div className={`unit-portrait enemy-art ${base.theme}`}>
             <img
               key={`${enemyId}-${chapter}`}
@@ -2418,6 +2418,14 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
             {interrupted && <span>打断：改用普攻</span>}
             {foe.stunProgress > 0 && <span>韧性压力 {foe.stunProgress}/{maxTenacity}</span>}
             {foe.controlWard && <span>下次眩晕免疫</span>}
+          </div>
+          <div
+            className={`intent-card enemy-intent mobile-enemy-intent ${controlled ? "controlled-intent" : intent.dangerous ? "dangerous" : ""}`}
+          >
+            <small>{foe.stunned ? "眩晕" : interrupted ? "特殊行动已打断" : intent.dangerous ? "危险意图" : "敌人意图"}</small>
+            <strong>{foe.stunned ? "✕" : interrupted ? "⚔" : intent.icon}</strong>
+            <b>{foe.stunned ? "无法行动" : interrupted ? "改用普攻" : intent.name}</b>
+            <span>{foe.stunned ? `本回合无法行动。下回合：${nextIntent.name}` : interrupted ? `「${intent.name}」已取消，改用基础攻击。` : intent.text}</span>
           </div>
         </div>
       </section>

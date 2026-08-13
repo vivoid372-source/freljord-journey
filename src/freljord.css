@@ -975,6 +975,7 @@ button {
   width: min(300px, 100%);
   margin: 14px auto 0;
 }
+.mobile-enemy-intent { display: none; }
 .intent-card {
   width: 190px;
   padding: 16px;
@@ -2917,48 +2918,80 @@ button {
   .end-turn { width: 150px; height: 46px; }
 }
 
-/* 手机战斗一屏模式：压缩非交互信息，始终露出手牌与结束回合 */
+/* 手机战斗台：信息贴近所属单位，剩余高度完整留给手牌 */
 @media (max-width: 600px) and (max-height: 980px) {
   .battle-shell {
+    width: 100%;
     height: 100dvh;
     min-height: 0;
     display: grid;
-    grid-template-rows: 42px 32px minmax(0, 1fr) 252px;
+    grid-template-rows: 42px 34px 280px minmax(0, 1fr);
     overflow: hidden;
   }
   .battle-shell .battle-topbar {
     height: 42px;
     min-height: 42px;
+    padding: 0 10px;
+    grid-template-columns: 58px 1fr 42px;
   }
-  .battle-topbar .route-title small { display: none; }
+  .battle-topbar .back-button.compact {
+    width: 52px;
+    white-space: nowrap;
+  }
+  .battle-topbar .back-button.compact::before { font-size: 10px; }
+  .battle-topbar .route-title small,
   .battle-shell > .owned-augments { display: none; }
+  .battle-topbar .route-title b { margin: 0; font-size: 16px; }
   .battle-shell > .equipment-bar {
+    width: calc(100% - 20px);
     height: 30px;
-    margin: 1px auto;
+    margin: 2px auto;
+    gap: 4px;
   }
   .battle-shell .equipment-slot { height: 30px; }
   .battle-shell .equipment-slot img { width: 23px; height: 23px; }
   .battlefield {
+    width: 100%;
+    height: 280px;
     min-height: 0;
-    height: 100%;
-    padding: 5px 8px;
-    gap: 4px 8px;
-    grid-template-rows: minmax(0, auto) minmax(54px, auto);
+    margin: 0;
+    padding: 7px 10px 5px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "hero enemy"
+      "log log";
+    grid-template-rows: auto 30px;
+    align-items: start;
+    align-content: start;
+    gap: 5px 10px;
     overflow: hidden;
   }
+  .hero-combatant { grid-area: hero; }
+  .enemy-combatant { grid-area: enemy; }
+  .battle-center {
+    grid-area: log;
+    display: block;
+    min-height: 0;
+    margin: 0;
+  }
+  .desktop-enemy-intent { display: none !important; }
+  .mobile-enemy-intent { display: grid; }
   .unit-portrait,
   .unit-portrait.enemy-art {
-    width: clamp(54px, 8.5vh, 72px);
-    height: clamp(54px, 8.5vh, 72px);
+    width: clamp(58px, 9vh, 72px);
+    height: clamp(58px, 9vh, 72px);
   }
   .combatant h2 {
-    margin-top: 3px;
+    margin: 3px 0 0;
     font-size: 15px;
+    line-height: 1.1;
   }
   .combatant > small { display: none; }
   .health-bar {
+    width: 100%;
     height: 19px;
-    margin: 3px 0;
+    margin: 4px 0 3px;
     position: relative;
     z-index: 1;
   }
@@ -2973,72 +3006,153 @@ button {
     line-height: 19px;
     text-shadow: 0 1px 3px #000, 0 0 3px #000;
   }
-  .combat-stats { margin: 2px 0; }
-  .combat-stats span { padding: 2px 1px; }
+  .combat-stats {
+    width: 100%;
+    margin: 2px 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .combat-stats span { padding: 3px 1px; }
+  .combat-stats span:first-child { display: none; }
+  .combat-stats span:nth-child(2) { border-right: 1px solid var(--line) !important; }
   .combat-stats small { font-size: 6px; }
   .combat-stats b { font-size: 10px; }
   .unit-stats {
-    min-height: 15px;
-    max-height: 29px;
+    min-height: 17px;
+    max-height: 34px;
+    margin-top: 3px;
+    gap: 3px;
     overflow: hidden;
   }
-  .unit-stats span { padding: 2px 3px; font-size: 6px; }
-  .battle-center {
-    min-height: 54px;
-    gap: 5px;
+  .unit-stats span {
+    max-width: 100%;
+    padding: 2px 4px;
+    font-size: 6px;
+    line-height: 1.25;
   }
-  .turn-log,
-  .intent-card,
-  .enemy-intent {
-    min-height: 54px;
-    max-height: 68px;
-    padding: 5px 7px;
+  .mobile-enemy-intent {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 58px;
+    max-height: 66px;
+    margin: 5px 0 0;
+    padding: 5px 6px;
+    grid-template-columns: 25px minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    text-align: left;
+    overflow: hidden;
   }
-  .intent-card { grid-template-columns: 25px minmax(0, 1fr); }
-  .intent-card strong { font-size: 15px; }
-  .intent-card b { font-size: 10px; }
-  .intent-card span { font-size: 7px; line-height: 1.2; }
+  .mobile-enemy-intent small {
+    grid-column: 1/-1;
+    text-align: left;
+    font-size: 6px;
+  }
+  .mobile-enemy-intent strong {
+    grid-column: 1;
+    grid-row: 2/4;
+    margin: 2px 4px 0 0;
+    font-size: 15px;
+  }
+  .mobile-enemy-intent b { font-size: 10px; }
+  .mobile-enemy-intent span {
+    margin: 1px 0 0;
+    font-size: 7px;
+    line-height: 1.2;
+  }
+  .turn-log {
+    width: 100%;
+    min-height: 28px;
+    max-height: 28px;
+    padding: 5px 8px;
+    display: block;
+    color: #91b2c0;
+    border: 1px solid rgba(88, 146, 169, 0.2);
+    background: rgba(4, 17, 26, 0.56);
+    font-size: 8px;
+    line-height: 16px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .turn-log span { display: block; overflow: hidden; text-overflow: ellipsis; }
+  .turn-log span:not(:first-child) { display: none; }
   .hand-zone {
+    width: 100%;
+    height: 100%;
     min-height: 0;
-    height: 252px;
-    padding: 2px 0 calc(4px + env(safe-area-inset-bottom));
+    padding: 3px 0 calc(4px + env(safe-area-inset-bottom));
     display: grid;
-    grid-template-rows: 17px minmax(0, 1fr) 48px;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 20px minmax(0, 1fr) 54px;
+    gap: 0;
     overflow: hidden;
   }
-  .swipe-card-hint { grid-row: 1; padding: 0 8px; font-size: 8px; }
+  .swipe-card-hint {
+    position: static;
+    grid-row: 1;
+    transform: none;
+    padding: 0 8px;
+    font-size: 8px;
+    line-height: 18px;
+    text-align: center;
+  }
   .deck-counter { display: none; }
   .cards-row {
     grid-row: 2;
+    width: 100%;
+    height: 100%;
     min-height: 0;
-    height: 187px;
-    padding: 34px 10px 3px;
-    gap: 8px;
+    padding: 48px 12px 8px;
+    gap: 10px;
     overflow-x: auto;
     overflow-y: hidden;
+    scroll-padding-inline: 10px;
   }
   .game-card,
   .game-card:hover {
-    flex-basis: 122px;
-    width: 122px;
-    height: 150px;
-    padding: 8px 7px;
+    box-sizing: border-box;
+    flex: 0 0 164px;
+    width: 164px;
+    height: 350px;
+    padding: 16px 12px;
+    transform: none;
   }
-  .game-card .card-icon { font-size: 20px; margin: 2px 0; }
-  .game-card > b { font-size: 11px; }
-  .game-card small { font-size: 6px; }
-  .game-card p { font-size: 7px; line-height: 1.25; overflow: visible; }
+  .game-card .card-icon { margin: 12px 0; font-size: 34px; }
+  .game-card > b { font-size: 16px; }
+  .game-card small { font-size: 9px; }
+  .game-card p { font-size: 10px; line-height: 1.45; overflow: visible; }
   .game-card.is-dragging,
-  .game-card.is-dragging:hover { --card-lift: -34px; }
+  .game-card.is-dragging:hover {
+    --card-lift: -44px;
+    transform: translateY(var(--card-lift));
+  }
   .turn-controls {
     grid-row: 3;
-    min-height: 46px;
-    padding: 1px 12px;
-    gap: 12px;
+    width: 100%;
+    min-height: 52px;
+    padding: 2px 12px;
+    gap: 14px;
   }
-  .energy-orb > b { width: 38px; height: 38px; font-size: 16px; }
+  .energy-orb > b { width: 40px; height: 40px; font-size: 17px; }
   .energy-orb > span { font-size: 8px; }
-  .end-turn { width: 138px; height: 40px; font-size: 13px; }
+  .end-turn { width: 152px; height: 44px; font-size: 13px; }
+}
+
+@media (max-width: 600px) and (max-height: 780px) {
+  .battle-shell { grid-template-rows: 42px 34px 250px minmax(0, 1fr); }
+  .battlefield { height: 250px; }
+  .unit-portrait,
+  .unit-portrait.enemy-art { width: 58px; height: 58px; }
+  .mobile-enemy-intent { min-height: 54px; max-height: 58px; }
+  .cards-row { padding-top: 38px; }
+  .game-card,
+  .game-card:hover {
+    height: 292px;
+    padding: 12px 10px;
+  }
+  .game-card .card-icon { margin: 8px 0; font-size: 30px; }
+  .game-card > b { font-size: 15px; }
+  .game-card p { font-size: 9px; line-height: 1.38; }
 }
 
 /* 英雄选择：只保留核心玩法与关键机制 */
