@@ -2700,6 +2700,241 @@ button {
   }
 }
 
+/* 手机战斗终版：双列对齐、完整手牌、上滑不裁切 */
+@media (max-width: 600px) {
+  html,
+  body,
+  #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  .battle-shell {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: clip;
+  }
+  .battle-shell .battle-topbar {
+    height: 48px;
+    min-height: 48px;
+    padding: 0 12px;
+    display: grid;
+    grid-template-columns: 82px 1fr 48px;
+  }
+  .battle-topbar .back-button.compact {
+    font-size: 0;
+    width: 34px;
+  }
+  .battle-topbar .back-button.compact::before {
+    content: "← 退出";
+    font-size: 11px;
+    color: #91adba;
+  }
+  .battle-topbar .route-title b { font-size: 15px; }
+  .battle-topbar .currencies span:last-child { display: none; }
+  .battle-shell > .equipment-bar {
+    width: calc(100% - 24px);
+    height: 38px;
+    margin: 7px auto 0;
+    gap: 5px;
+  }
+  .battle-shell .equipment-slot {
+    min-width: 0;
+    height: 38px;
+    padding: 0;
+  }
+  .battle-shell .equipment-slot img { width: 28px; height: 28px; }
+  .battle-shell .equipment-slot strong { font-size: 14px; }
+  .battlefield {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    padding: 12px 10px 14px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "hero enemy"
+      "center center";
+    align-items: start;
+    gap: 12px 10px;
+  }
+  .battlefield > .combatant:first-child { grid-area: hero; }
+  .battlefield > .combatant:last-child { grid-area: enemy; }
+  .battle-center {
+    grid-area: center;
+    display: grid;
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+    align-items: stretch;
+    gap: 8px;
+    margin: 0;
+  }
+  .turn-log {
+    min-width: 0;
+    min-height: 58px;
+    padding: 8px;
+    justify-content: center;
+    border: 1px solid rgba(88, 146, 169, 0.2);
+    background: rgba(4, 17, 26, 0.5);
+    font-size: 9px;
+    line-height: 1.45;
+  }
+  .turn-log span:not(:first-child) { display: none; }
+  .unit-portrait,
+  .unit-portrait.enemy-art {
+    width: 88px;
+    height: 88px;
+  }
+  .combatant h2 {
+    margin: 6px 0 0;
+    font-size: 17px;
+    line-height: 1.15;
+  }
+  .combatant > small { font-size: 8px; }
+  .health-bar {
+    width: 100%;
+    height: 18px;
+    margin: 7px 0 5px;
+  }
+  .health-bar b { line-height: 16px; }
+  .combat-stats {
+    width: 100%;
+    margin: 5px 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .combat-stats span {
+    min-width: 0;
+    padding: 4px 1px;
+    border-right: 1px solid var(--line) !important;
+  }
+  .combat-stats span:last-child { border-right: 0 !important; }
+  .combat-stats small { font-size: 7px; }
+  .combat-stats b { font-size: 12px; }
+  .unit-stats {
+    min-height: 20px;
+    gap: 3px;
+    flex-wrap: wrap;
+    align-content: flex-start;
+  }
+  .unit-stats span {
+    max-width: 100%;
+    padding: 3px 4px;
+    font-size: 7px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+  .intent-card,
+  .enemy-intent {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 58px;
+    margin: 0;
+    padding: 7px 9px;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    text-align: left;
+  }
+  .intent-card small {
+    grid-column: 1/-1;
+    text-align: left;
+    font-size: 7px;
+    letter-spacing: 0.12em;
+  }
+  .intent-card strong {
+    grid-column: 1;
+    grid-row: 2/4;
+    margin: 2px 5px 0 0;
+    font-size: 19px;
+  }
+  .intent-card b { font-size: 11px; }
+  .intent-card span {
+    min-width: 0;
+    font-size: 8px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+  .hand-zone {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    padding: 8px 0 calc(14px + env(safe-area-inset-bottom));
+    gap: 0;
+    overflow: visible;
+  }
+  .swipe-card-hint {
+    position: static;
+    order: 1;
+    transform: none;
+    padding: 2px 12px 0;
+    text-align: center;
+  }
+  .deck-counter {
+    order: 2;
+    margin-top: 2px;
+  }
+  .cards-row {
+    order: 3;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100vw;
+    min-height: 244px;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding: 78px 12px 10px;
+    gap: 10px;
+    scroll-padding-inline: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .game-card,
+  .game-card:hover {
+    box-sizing: border-box;
+    flex: 0 0 148px;
+    width: 148px;
+    height: 190px;
+    transform: none;
+  }
+  .game-card.is-dragging,
+  .game-card.is-dragging:hover {
+    transform: translateY(var(--card-lift));
+  }
+  .game-card p {
+    font-size: 9px;
+    line-height: 1.42;
+    overflow: hidden;
+  }
+  .game-card > b { font-size: 14px; }
+  .game-card small { font-size: 8px; }
+  .turn-controls {
+    order: 4;
+    box-sizing: border-box;
+    min-height: 58px;
+    padding: 6px 16px 0;
+    gap: 18px;
+  }
+  .energy-orb > b { width: 44px; height: 44px; font-size: 18px; }
+  .energy-orb > span { font-size: 10px; }
+  .end-turn { width: 150px; height: 46px; }
+}
+
+/* 英雄选择：只保留核心玩法与关键机制 */
+.compact-mechanic-guide { margin-bottom: 14px; }
+@media (max-width: 600px) {
+  .standalone-journey .journey-header { padding-top: 30px; }
+  .standalone-journey .journey-header h1 { font-size: 34px; }
+  .standalone-journey .journey-header p { font-size: 10px; }
+  .hero-detail-layout .champion-card { min-height: 142px; }
+  .hero-detail-layout .run-panel { padding: 16px 14px; }
+  .hero-detail-layout .run-panel > h3 { margin: 8px 0; }
+  .compact-mechanic-guide > span {
+    grid-template-columns: 54px minmax(0, 1fr);
+    padding: 7px 0;
+  }
+  .compact-mechanic-guide p { font-size: 9px; line-height: 1.45; }
+  .hero-detail-layout .run-stats { margin: 10px 0; }
+  .hero-detail-layout .start-button { margin-top: 8px; }
+}
+
 /* 最终覆盖：装备商店不允许横向滑动 */
 .shop-shell{overflow-x:hidden}
 .shop-shell .gear-stock{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:min(970px,calc(100% - 40px));overflow:visible;padding:0}

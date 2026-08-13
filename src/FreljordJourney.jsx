@@ -1082,7 +1082,6 @@ function Lobby({ onBack, onStart, standalone = false }) {
   const [selected, setSelected] = useState("cho");
   const champion = championRoster[selected];
   const guide = championGuides[selected];
-  const builds = championBuilds[selected];
   return (
     <main className={`journey-shell ${standalone ? "standalone-journey" : ""}`}>
       {standalone && (
@@ -1150,24 +1149,9 @@ function Lobby({ onBack, onStart, standalone = false }) {
             <b>冰霜王座</b>
           </div>
           <h3>{champion.mechanic}</h3>
-          <div className="mechanic-guide">
-            <span><b>核心循环</b><p>{guide.loop}</p></span>
-            <span><b>控制规则</b><p>{guide.control}</p></span>
-            <span className="guide-warning"><b>注意</b><p>{guide.warning}</p></span>
-          </div>
-          <div className="build-guide">
-            {builds.map((build) => <div key={build.id}><b>{build.name}</b><small>{build.items.slice(0, 3).map(id => equipment[id].name).join(" → ")}</small></div>)}
-          </div>
-          <p className="shared-rule">通用续航：每场胜利后，所有英雄恢复15%最大生命。</p>
-          <div className="selected-skills">
-            {Object.values(champion.skills).map((skill) => (
-              <span key={skill.id}>
-                <b>
-                  {skill.key} · {skill.name}
-                </b>
-                <small>{skill.text}</small>
-              </span>
-            ))}
+          <div className="mechanic-guide compact-mechanic-guide">
+            <span><b>核心玩法</b><p>{guide.loop}</p></span>
+            <span><b>关键机制</b><p>{guide.control}</p></span>
           </div>
           <div className="run-stats">
             <span>
@@ -2291,6 +2275,14 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               <span key={i}>{line}</span>
             ))}
           </div>
+          <div
+            className={`intent-card enemy-intent ${controlled ? "controlled-intent" : intent.dangerous ? "dangerous" : ""}`}
+          >
+            <small>{foe.stunned ? "眩晕" : interrupted ? "特殊行动已打断" : intent.dangerous ? "危险意图" : "敌人意图"}</small>
+            <strong>{foe.stunned ? "✕" : interrupted ? "⚔" : intent.icon}</strong>
+            <b>{foe.stunned ? "无法行动" : interrupted ? "改用普攻" : intent.name}</b>
+            <span>{foe.stunned ? `本回合无法行动。下回合：${nextIntent.name}（${nextIntent.text}）` : interrupted ? `「${intent.name}」已取消，本回合改用基础攻击。` : intent.text}</span>
+          </div>
         </div>
         <div className="combatant">
           <div className={`unit-portrait enemy-art ${base.theme}`}>
@@ -2320,14 +2312,6 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
             {interrupted && <span>打断：改用普攻</span>}
             {foe.stunProgress > 0 && <span>韧性压力 {foe.stunProgress}/{maxTenacity}</span>}
             {foe.controlWard && <span>下次眩晕免疫</span>}
-          </div>
-          <div
-            className={`intent-card enemy-intent ${controlled ? "controlled-intent" : intent.dangerous ? "dangerous" : ""}`}
-          >
-            <small>{foe.stunned ? "眩晕" : interrupted ? "特殊行动已打断" : intent.dangerous ? "危险意图" : "敌人意图"}</small>
-            <strong>{foe.stunned ? "✕" : interrupted ? "⚔" : intent.icon}</strong>
-            <b>{foe.stunned ? "无法行动" : interrupted ? "改用普攻" : intent.name}</b>
-            <span>{foe.stunned ? `本回合无法行动。下回合：${nextIntent.name}（${nextIntent.text}）` : interrupted ? `「${intent.name}」已取消，本回合改用基础攻击。` : intent.text}</span>
           </div>
         </div>
       </section>
@@ -2651,6 +2635,9 @@ function GameRun({ championId, onQuit }) {
   const [enemyId, setEnemyId] = useState("wolf");
   const [postBattle, setPostBattle] = useState(null);
   const [bought, setBought] = useState(false);
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [screen]);
   const stock = useMemo(() => {
     const builds = championBuilds[run.championId];
     const relevantIds = [...new Set(builds.flatMap((build) => build.items))];
@@ -2807,6 +2794,9 @@ function GameRun({ championId, onQuit }) {
 export default function App({ standalone = false }) {
   const [screen, setScreen] = useState(standalone ? "intro" : "home");
   const [championId, setChampionId] = useState("cho");
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [screen]);
   if (screen === "intro") return <FrozenIntro onComplete={() => setScreen("journey")} />;
   if (screen === "journey")
     return (
