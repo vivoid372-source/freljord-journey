@@ -3204,6 +3204,329 @@ button {
   background: transparent;
   cursor: pointer;
 }
+
+/* 手机一屏终版：选择页三项同屏，战斗手牌全部可见并点击打出 */
+@media (max-width: 600px) and (max-height: 980px) {
+  .augment-screen,
+  .skill-reward-screen,
+  .rest-screen {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .augment-screen,
+  .skill-reward-screen {
+    display: grid;
+    grid-template-rows: 42px 132px minmax(0, 1fr);
+    place-items: stretch;
+    padding: 0 10px 10px;
+  }
+  .augment-screen .battle-topbar,
+  .skill-reward-screen .battle-topbar,
+  .rest-screen .battle-topbar {
+    box-sizing: border-box;
+    position: relative;
+    inset: auto;
+    width: calc(100% + 20px);
+    height: 42px;
+    min-height: 42px;
+    margin-left: -10px;
+    padding: 0 10px;
+  }
+  .augment-screen .reward-heading,
+  .skill-reward-screen .reward-heading {
+    align-self: center;
+    margin: 0;
+    padding: 8px 10px 4px;
+  }
+  .augment-screen .reward-heading .eyebrow,
+  .skill-reward-screen .reward-heading .eyebrow { font-size: 8px; letter-spacing: 0.24em; }
+  .augment-screen .reward-heading h1,
+  .skill-reward-screen .reward-heading h1 {
+    margin: 7px 0 5px;
+    font-size: clamp(25px, 8vw, 31px);
+    line-height: 1.05;
+  }
+  .augment-screen .reward-heading p,
+  .skill-reward-screen .reward-heading p { font-size: 9px; line-height: 1.45; }
+
+  .augment-screen .augment-grid,
+  .skill-reward-screen .skill-reward-grid {
+    box-sizing: border-box;
+    align-self: stretch;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, minmax(0, 150px));
+    align-content: start;
+    gap: 8px;
+  }
+  .augment-screen .augment-card,
+  .skill-reward-screen .skill-reward-grid button {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 9px 12px;
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr);
+    column-gap: 10px;
+    align-items: center;
+    text-align: left;
+    overflow: hidden;
+  }
+  .augment-screen .augment-card:hover,
+  .skill-reward-screen .skill-reward-grid button:hover { transform: none; }
+  .augment-screen .augment-rarity {
+    position: static;
+    grid-column: 3;
+    grid-row: 1;
+    align-self: start;
+    font-size: 7px;
+  }
+  .augment-screen .augment-icon,
+  .skill-reward-screen .skill-reward-grid button > span {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    width: 42px;
+    height: 42px;
+    margin: 0;
+    font-size: 26px;
+    display: grid;
+    place-items: center;
+  }
+  .skill-reward-screen .skill-reward-grid button > span { border-radius: 50%; font-size: 17px; }
+  .augment-screen .augment-card > b,
+  .skill-reward-screen .skill-reward-grid button > b {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+    font-size: 15px;
+    align-self: end;
+  }
+  .augment-screen .augment-card p,
+  .skill-reward-screen .skill-reward-grid button p {
+    grid-column: 2 / 4;
+    grid-row: 2;
+    align-self: start;
+    margin: 3px 0 0;
+    color: #a9c0cb;
+    font-size: 8px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+  .augment-screen .augment-card small,
+  .skill-reward-screen .skill-reward-grid button small {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: end;
+    margin: 0;
+    font-size: 7px;
+    white-space: nowrap;
+  }
+
+  .rest-screen {
+    display: grid;
+    grid-template-rows: 42px 30px 125px minmax(0, 1fr);
+    padding: 0 10px 10px;
+  }
+  .rest-screen > .owned-augments {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 26px;
+    height: 26px;
+    margin: 2px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    overflow: hidden;
+  }
+  .rest-screen > .owned-augments .owned-augment {
+    height: 23px;
+    padding: 2px 7px;
+  }
+  .rest-screen > .owned-augments .owned-augment strong { font-size: 12px; }
+  .rest-screen .node-heading {
+    box-sizing: border-box;
+    width: 100%;
+    height: 125px;
+    margin: 0;
+    padding: 12px 4px;
+    gap: 12px;
+    align-items: center;
+  }
+  .rest-screen .node-symbol {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+    font-size: 21px;
+  }
+  .rest-screen .node-heading .eyebrow { font-size: 8px; letter-spacing: 0.2em; }
+  .rest-screen .node-heading h1 { margin: 5px 0; font-size: 27px; line-height: 1.08; }
+  .rest-screen .node-heading p { font-size: 9px; line-height: 1.4; }
+  .rest-screen .rest-options {
+    box-sizing: border-box;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, minmax(0, 150px));
+    align-content: start;
+    gap: 8px;
+  }
+  .rest-screen .rest-options button {
+    box-sizing: border-box;
+    min-height: 0;
+    padding: 10px 13px;
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 11px;
+    align-content: center;
+    text-align: left;
+    overflow: hidden;
+  }
+  .rest-screen .rest-options button:hover { transform: none; }
+  .rest-screen .rest-options strong {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    margin: 0;
+    font-size: 27px;
+    text-align: center;
+  }
+  .rest-screen .rest-options b { font-size: 15px; }
+  .rest-screen .rest-options p { margin: 4px 0 0; font-size: 8px; line-height: 1.4; }
+
+  .battle-shell {
+    grid-template-rows: 42px 30px 244px minmax(0, 1fr);
+  }
+  .battle-shell > .equipment-bar { height: 28px; }
+  .battle-shell .equipment-slot { height: 28px; }
+  .battlefield {
+    height: 244px;
+    padding: 5px 8px 4px;
+    grid-template-rows: auto 26px;
+    gap: 3px 8px;
+  }
+  .unit-portrait,
+  .unit-portrait.enemy-art { width: 56px; height: 56px; }
+  .combatant h2 { font-size: 14px; }
+  .health-bar { height: 17px; margin: 3px 0 2px; }
+  .health-bar b { font-size: 10px; line-height: 17px; }
+  .combat-stats { margin: 1px 0; }
+  .unit-stats { margin-top: 2px; max-height: 28px; }
+  .mobile-enemy-intent {
+    min-height: 48px;
+    max-height: 52px;
+    margin-top: 3px;
+    padding: 4px 5px;
+  }
+  .mobile-enemy-intent span { font-size: 6px; }
+  .turn-log { min-height: 25px; max-height: 25px; padding: 4px 6px; }
+
+  .hand-zone {
+    padding: 2px 7px calc(3px + env(safe-area-inset-bottom));
+    grid-template-rows: 17px minmax(0, 1fr) 48px;
+  }
+  .swipe-card-hint {
+    grid-row: 1;
+    padding: 0;
+    font-size: 7px;
+    line-height: 15px;
+    letter-spacing: 0.08em;
+  }
+  .cards-row {
+    grid-row: 2;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 5px 2px 4px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    gap: 5px;
+    overflow: hidden;
+  }
+  .game-card,
+  .game-card:hover {
+    box-sizing: border-box;
+    flex: 0 0 calc((100% - 15px) / 4);
+    width: calc((100% - 15px) / 4);
+    height: auto;
+    max-height: 100%;
+    aspect-ratio: 0.72;
+    align-self: center;
+    min-width: 0;
+    min-height: 0;
+    padding: 7px 3px 5px;
+    transform: none;
+    touch-action: manipulation;
+    overflow: hidden;
+  }
+  .game-card .card-cost {
+    top: -5px;
+    left: -5px;
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+  .game-card .skill-key { top: 3px; right: 3px; width: 16px; height: 16px; font-size: 8px; }
+  .game-card .card-icon { margin: 4px 0 2px; font-size: 20px; }
+  .game-card > b {
+    width: 100%;
+    font-size: 10px;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .game-card small { margin: 2px 0; font-size: 6px; }
+  .game-card p {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    margin: auto 0 0;
+    font-size: 6px;
+    line-height: 1.25;
+    overflow: hidden;
+  }
+  .turn-controls {
+    grid-row: 3;
+    min-height: 46px;
+    padding: 1px 8px;
+    gap: 12px;
+  }
+  .energy-orb > b { width: 36px; height: 36px; font-size: 15px; }
+  .end-turn { width: 142px; height: 39px; font-size: 12px; }
+}
+
+@media (max-width: 600px) and (max-height: 780px) {
+  .augment-screen,
+  .skill-reward-screen { grid-template-rows: 42px 112px minmax(0, 1fr); }
+  .rest-screen { grid-template-rows: 42px 28px 105px minmax(0, 1fr); }
+  .rest-screen .node-heading { height: 105px; }
+  .augment-screen .augment-grid,
+  .skill-reward-screen .skill-reward-grid,
+  .rest-screen .rest-options { grid-template-rows: repeat(3, minmax(0, 135px)); }
+  .battle-shell { grid-template-rows: 42px 30px 222px minmax(0, 1fr); }
+  .battlefield { height: 222px; }
+  .unit-portrait,
+  .unit-portrait.enemy-art { width: 50px; height: 50px; }
+  .mobile-enemy-intent { min-height: 44px; max-height: 47px; }
+  .game-card p { -webkit-line-clamp: 3; }
+}
 @media (max-width: 600px) {
   .standalone-journey .journey-header { padding-top: 30px; }
   .standalone-journey .journey-header h1 { font-size: 34px; }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "./freljord.css";
 
 const skills = {
@@ -59,7 +59,6 @@ const baseStarterDeck = [
   "q",
   "attack",
   "w",
-  "attack",
   "e",
   "attack",
   "q",
@@ -70,16 +69,12 @@ const baseStarterDeck = [
   "attack",
   "e",
   "attack",
-  "attack",
   "q",
   "attack",
 ];
 
-// 技能牌数量不变，额外加入与原牌组相同数量的普通攻击牌。
-const starterDeck = [
-  ...baseStarterDeck,
-  ...baseStarterDeck.filter((id) => id === "attack"),
-];
+// 普攻与技能接近 1:1；每场战斗和弃牌回洗时都会重新洗牌。
+const starterDeck = [...baseStarterDeck];
 
 const HERO_DAMAGE_SCALE = 0.5;
 
@@ -1340,7 +1335,7 @@ function draw(pile, discard, count) {
   let p = [...pile],
     d = [...discard];
   if (p.length < count) {
-    p = [...p, ...shuffleDeck(d)];
+    p = shuffleDeck([...p, ...d]);
     d = [];
   }
   return { cards: p.slice(0, count), pile: p.slice(count), discard: d };
@@ -2451,7 +2446,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
             />
           ))}
         </div>
-        <span className="swipe-card-hint">↑ 上滑卡牌 · 发光后释放打出</span>
+        <span className="swipe-card-hint">点击卡牌打出</span>
         <div className="turn-controls">
           <div className="energy-orb">
             <b>{hero.energy}</b>
@@ -2507,45 +2502,12 @@ function SkillCard({
   onClick,
   cost = skill.cost,
 }) {
-  const startY = useRef(null);
-  const dragged = useRef(false);
-  const [lift, setLift] = useState(0);
-  const ready = lift <= -58;
-  const resetDrag = () => {
-    startY.current = null;
-    window.setTimeout(() => {
-      dragged.current = false;
-      setLift(0);
-    }, 0);
-  };
-
   return (
     <button
       disabled={disabled}
-      onClick={() => {
-        if (!dragged.current) onClick();
-      }}
-      onPointerDown={(event) => {
-        if (disabled) return;
-        startY.current = event.clientY;
-        dragged.current = false;
-        event.currentTarget.setPointerCapture(event.pointerId);
-      }}
-      onPointerMove={(event) => {
-        if (startY.current === null || disabled) return;
-        const distance = Math.min(0, event.clientY - startY.current);
-        if (distance < -6) dragged.current = true;
-        setLift(Math.max(-82, distance));
-      }}
-      onPointerUp={() => {
-        if (ready && !disabled) onClick();
-        resetDrag();
-      }}
-      onPointerCancel={resetDrag}
-      style={{ "--card-lift": `${lift}px` }}
-      className={`game-card type-${skill.type} ${disabled ? "disabled" : ""} ${lift < 0 ? "is-dragging" : ""} ${ready ? "swipe-ready" : ""}`}
+      onClick={onClick}
+      className={`game-card type-${skill.type} ${disabled ? "disabled" : ""}`}
     >
-      <span className="swipe-release">释放打出</span>
       <span className="card-cost">{cost}</span>
       <span className="skill-key">{skill.key}</span>
       <span className="card-icon">{skill.icon}</span>
@@ -2648,7 +2610,7 @@ function SkillReward({ run, onChoose, onQuit }) {
     [run.upgrades],
   );
   return (
-    <main className="reward-screen">
+    <main className="reward-screen skill-reward-screen">
       <Header run={run} onQuit={onQuit} label="技能强化" />
       <div className="reward-heading">
         <div className="eyebrow">MASTER YOUR ABILITIES</div>
@@ -2686,7 +2648,7 @@ function Rest({ run, onChoose, onQuit }) {
     .sort((a, b) => ((a.id.charCodeAt(0) + run.node * 17) % 31) - ((b.id.charCodeAt(0) + run.node * 17) % 31))
     .slice(0, 3);
   return (
-    <main className="shop-shell">
+    <main className="shop-shell rest-screen">
       <Header run={run} onQuit={onQuit} label="炉火营地" />
       <section className="node-heading">
         <div className="node-symbol warm">♨</div>
@@ -2721,7 +2683,7 @@ function Augment({ run, onChoose, onQuit }) {
     )
     .slice(0, 3);
   return (
-    <main className="reward-screen">
+    <main className="reward-screen augment-screen">
       <Header run={run} onQuit={onQuit} label="海克斯赐福" />
       <div className="reward-heading">
         <div className="eyebrow">HEXTECH AUGMENT</div>
