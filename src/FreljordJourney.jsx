@@ -148,7 +148,7 @@ const championRoster = {
         typeName: "终极技能",
         cost: 2,
         icon: "◆",
-        text: "根据流血层数造成高额伤害；满层流血时，打出后立即将这张 R 返回手牌。",
+        text: "根据流血层数造成高额伤害；满层时R回手，结算后流血层数减半并向下取整。",
       },
     },
   },
@@ -482,7 +482,7 @@ const equipment = {
     image: "/game-icons/iceborn.png",
     hp: 18,
     tags: ["生命", "控制"],
-    text: "Q 或 W 成功打断后，下一次普攻额外造成最大生命 7% 的伤害。",
+    text: "技能成功眩晕或打断后，下一次普攻额外造成最大生命 7% 的伤害。",
   },
   shadowflame: {
     id: "shadowflame",
@@ -518,27 +518,27 @@ const equipment = {
     image: "/game-icons/banshee.png",
     ap: 5,
     tags: ["法强", "防御"],
-    text: "每场战斗第一次受到伤害时完全抵消；随后为巫妖之祸充能。",
+    text: "每场战斗第一次受到伤害时完全抵消；若持有巫妖之祸，则为其充能。",
   },
-  cleaver: { id: "cleaver", name: "黑色切割者", price: 27, image: "/game-icons/cleaver.png", ad: 3, hp: 12, tags: ["战士", "流血"], routes: ["darius_fighter", "darius_bleed"], text: "每层流血使诺手造成的伤害提高 3%；满层额外提高 10%。" },
+  cleaver: { id: "cleaver", name: "黑色切割者", price: 27, image: "/game-icons/cleaver.png", ad: 3, hp: 12, tags: ["战士", "流血"], routes: ["darius_fighter", "darius_bleed"], text: "每层流血使伤害提高 3%；满层额外提高 10%。" },
   shojin: { id: "shojin", name: "朔极之矛", price: 31, image: "/game-icons/shojin.png", ad: 4, hp: 10, tags: ["战士", "技能", "抽牌"], routes: ["darius_fighter", "darius_infinite_r"], text: "每打出 1 张技能牌，立即抽 1 张牌；手牌达到8张时不再抽取。" },
   sterak: { id: "sterak", name: "斯特拉克的挑战护手", price: 30, image: "/game-icons/sterak.png", ad: 3, hp: 18, tags: ["战士", "护盾"], routes: ["darius_fighter", "tahm_shield"], text: "每场首次生命低于 40% 时，获得最大生命 25% 的护盾。" },
-  deathdance: { id: "deathdance", name: "死亡之舞", price: 29, image: "/game-icons/deathdance.png", ad: 4, tags: ["战士", "续航"], routes: ["darius_fighter"], text: "终极技能斩杀时恢复 16% 最大生命，并清除敌人的攻击强化。" },
-  collector: { id: "collector", name: "收集者", price: 30, image: "/game-icons/collector.png", ad: 4, crit: 18, armorPen: 3, tags: ["暴击", "穿甲", "终结"], routes: ["darius_crit", "jinx_crit", "jinx_poke"], text: "伤害可暴击；敌人生命低于 8% 时直接处决。" },
+  deathdance: { id: "deathdance", name: "死亡之舞", price: 29, image: "/game-icons/deathdance.png", ad: 4, tags: ["战士", "续航"], routes: ["darius_fighter"], text: "终极技能斩杀时恢复 16% 最大生命。" },
+  collector: { id: "collector", name: "收集者", price: 30, image: "/game-icons/collector.png", ad: 4, crit: 18, armorPen: 3, tags: ["暴击", "穿甲", "终结"], routes: ["darius_crit", "jinx_crit", "jinx_poke"], text: "普通攻击与可暴击的技能获得暴击收益；敌人生命低于 8% 时直接处决。" },
   infinity: { id: "infinity", name: "无尽之刃", price: 38, image: "/game-icons/infinity.png", ad: 6, crit: 25, tags: ["暴击", "终结"], routes: ["darius_crit", "jinx_crit"], text: "暴击伤害从 175% 提高到 225%。" },
   essence: { id: "essence", name: "夺萃之镰", price: 29, image: "/game-icons/essence.png", ad: 4, crit: 18, tags: ["暴击", "抽牌"], routes: ["darius_crit", "jinx_draw"], text: "每回合第一次普攻暴击时，恢复 1 能量并抽 1 张牌。" },
   bork: { id: "bork", name: "破败王者之刃", price: 27, image: "/game-icons/bork.png", ad: 3, tags: ["机枪", "普攻", "恢复"], routes: ["jinx_draw"], text: "普攻额外造成敌人当前生命5%的伤害，并恢复本次普攻伤害的15%。" },
   bloodthirster: { id: "bloodthirster", name: "饮血剑", price: 32, image: "/game-icons/bloodthirster.png", ad: 5, crit: 18, tags: ["暴击", "恢复", "护盾"], routes: ["jinx_draw", "jinx_crit"], text: "普攻恢复所造成伤害的25%；满生命时治疗转化为护盾，最多为最大生命20%。" },
-  phantom: { id: "phantom", name: "幻影之舞", price: 26, image: "/game-icons/phantom.png", crit: 18, tags: ["机枪", "暴击"], routes: ["jinx_draw", "jinx_crit"], text: "机枪每层连击额外增加 2 点伤害；满层后每第 2 次普攻抽 1 张。" },
+  phantom: { id: "phantom", name: "幻影之舞", price: 26, image: "/game-icons/phantom.png", crit: 18, tags: ["普攻", "暴击", "抽牌"], routes: ["jinx_draw", "jinx_crit"], text: "每打出第 2 张 A，抽 1 张牌；每回合最多触发 2 次。" },
   kraken: { id: "kraken", name: "海妖杀手", price: 29, image: "/game-icons/kraken.png", ad: 4, tags: ["机枪", "普攻"], routes: ["jinx_draw"], text: "每第 3 次普攻额外造成 14+AD×0.8 伤害。" },
-  manamune: { id: "manamune", name: "魔宗", price: 26, image: "/game-icons/manamune.png", ad: 3, tags: ["穿甲", "施法"], routes: ["jinx_poke"], text: "W 与 R 额外造成 4×当前能量的伤害；每场第 3 次施法后再抽 1 张。" },
+  manamune: { id: "manamune", name: "魔宗", price: 26, image: "/game-icons/manamune.png", ad: 3, tags: ["穿甲", "施法"], routes: ["jinx_poke"], text: "W 与 R 额外造成当前剩余能量×4的伤害；每场第 3 次施法后抽 1 张牌。" },
   youmuu: { id: "youmuu", name: "幽梦之灵", price: 27, image: "/game-icons/youmuu.png", ad: 5, armorPen: 5, tags: ["穿甲", "爆发"], routes: ["jinx_poke"], text: "每回合第一张 W 或 R 额外造成 8 点伤害。" },
-  serylda: { id: "serylda", name: "赛瑞尔达的怨恨", price: 31, image: "/game-icons/serylda.png", ad: 4, armorPen: 7, tags: ["穿甲", "控制"], routes: ["jinx_poke"], text: "W 能打断危险行动；W 与 R 无视 7 点护盾并获得穿甲增伤。" },
-  axiom: { id: "axiom", name: "公理圆弧", price: 32, image: "/game-icons/axiom.png", ad: 5, armorPen: 4, tags: ["穿甲", "终结", "能量"], routes: ["jinx_poke", "darius_infinite_r"], text: "每次打出 R 后恢复 1 能量；金克斯每场首次打出 R 时，额外将一张 R 返回手牌。" },
-  fimbulwinter: { id: "fimbulwinter", name: "末日寒冬", price: 28, image: "/game-icons/fimbulwinter.png", hp: 18, tags: ["护盾", "控制"], routes: ["tahm_shield"], text: "Q 或 W 打断敌人时获得最大生命 10% 护盾。" },
+  serylda: { id: "serylda", name: "赛瑞尔达的怨恨", price: 31, image: "/game-icons/serylda.png", ad: 4, armorPen: 7, tags: ["穿甲", "控制"], routes: ["jinx_poke"], text: "W 能打断危险行动；所有伤害最多额外穿透 7 点护盾。" },
+  axiom: { id: "axiom", name: "公理圆弧", price: 32, image: "/game-icons/axiom.png", ad: 5, armorPen: 4, tags: ["穿甲", "终结", "能量"], routes: ["jinx_poke", "darius_infinite_r"], text: "每次打出 R 后恢复 1 能量；每场首次打出 R 时，将一张 R 返回手牌。" },
+  fimbulwinter: { id: "fimbulwinter", name: "末日寒冬", price: 28, image: "/game-icons/fimbulwinter.png", hp: 18, tags: ["护盾", "控制"], routes: ["tahm_shield"], text: "技能成功打断敌人时，获得最大生命 10% 的护盾。" },
   despair: { id: "despair", name: "无终恨意", price: 30, image: "/game-icons/despair.png", hp: 20, tags: ["护盾", "恢复", "生命"], routes: ["tahm_tank", "tahm_shield"], text: "护盾被消耗后，对敌人造成消耗量 50% 的伤害并恢复等量生命。" },
-  moonstone: { id: "moonstone", name: "月石再生器", price: 26, image: "/game-icons/moonstone.png", ap: 4, hp: 10, tags: ["护盾", "恢复"], routes: ["tahm_shield"], text: "厚实表皮的护盾提高 35%，获得护盾时恢复其数值 20% 的生命。" },
-  dawncore: { id: "dawncore", name: "黎明核心", price: 34, image: "/game-icons/dawncore.png", ap: 6, tags: ["护盾", "法强"], routes: ["tahm_shield", "tahm_ap"], text: "每持有一件护盾装备，厚实表皮护盾与AP提高 8%。" },
+  moonstone: { id: "moonstone", name: "月石再生器", price: 26, image: "/game-icons/moonstone.png", ap: 4, hp: 10, tags: ["护盾", "恢复"], routes: ["tahm_shield"], text: "E生成的护盾提高 35%，并恢复该护盾数值 20% 的生命。" },
+  dawncore: { id: "dawncore", name: "黎明核心", price: 34, image: "/game-icons/dawncore.png", ap: 6, tags: ["护盾", "法强"], routes: ["tahm_shield", "tahm_ap"], text: "每持有一件护盾装备，E生成的护盾与总AP提高 8%。" },
   trinity: { id: "trinity", name: "三相之力", price: 31, image: "/game-icons/trinity.png", ad: 4, hp: 10, tags: ["战士", "连招", "普攻"], text: "每回合第一次打出技能后，为下一张 A 充能；该 A 的基础伤害增加 6 + AD×0.7。" },
   guinsoo: { id: "guinsoo", name: "鬼索的狂暴之刃", price: 29, image: "/game-icons/guinsoo.svg", ad: 3, ap: 3, tags: ["普攻", "连击"], text: "每第 3 张 A 的基础伤害增加 8 + AD×0.5，普攻计数跨回合保留。" },
   cosmic: { id: "cosmic", name: "宇宙驱动", price: 28, image: "/game-icons/cosmic.svg", ap: 6, hp: 8, tags: ["法强", "抽牌", "技能"], text: "每回合打出的第 2 张技能牌额外抽 1 张牌；每回合触发一次。" },
@@ -808,10 +808,11 @@ const route = [
   },
   {
     chapter: 2,
-    type: "rest",
-    title: "失落炉乡",
-    subtitle: "随机机动强化",
-    icon: "♨",
+    type: "battle",
+    title: "冰爪伏击",
+    subtitle: "普通战斗",
+    enemy: "wolf",
+    icon: "⚔",
   },
   {
     chapter: 2,
@@ -1408,7 +1409,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
   const hpScale = 0.7 + Math.pow(battleProgress, 1.55) * 4.42;
   const offenseScale = 0.7 + Math.pow(battleProgress, 1.35) * 1.15;
   const sustainScale = 0.75 + Math.pow(battleProgress, 1.5) * 2.55;
-  const hpRankScale = template.demonBoss ? 0.86 : template.finalBoss ? 0.82 : template.boss ? 1.08 : template.elite ? 1.12 : 1;
+  const firstChapterBoss = route[run.node]?.chapterBoss && route[run.node]?.chapter === 1;
+  const hpRankScale = template.demonBoss ? 1.2 : template.finalBoss ? 1.15 : firstChapterBoss ? 1.08 : template.boss ? 1.22 : template.elite ? 1.12 : 1;
   const offenseRankScale = template.demonBoss ? 0.9 : template.finalBoss ? 0.8 : template.boss ? 1 : template.elite ? 1.05 : 1;
   const scaleAction = (action) => {
     const scaled = {
@@ -1632,7 +1634,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         return `立即造成 ${previewDamage(id, hero.ad + 8 + level * 4, { isBasicAttack: true, bleed: nextBleed })} 点强化普攻伤害，流血 ${foe.bleed}/${bleedCap} → ${nextBleed}/${bleedCap}。`;
       }
       if (id === "e") return `打断「${intent.name}」；敌人改用普通攻击。`;
-      return `造成 ${previewDamage(id, Math.round(12 + hero.ad + foe.bleed * 6 + level * 5))} 点伤害（${foe.bleed}层流血）${foe.bleed >= bleedCap ? "，打出后立即将这张 R 返回手牌" : ""}。`;
+      return `造成 ${previewDamage(id, Math.round(12 + hero.ad + foe.bleed * 6 + level * 5))} 点伤害（${foe.bleed}层流血）${foe.bleed >= bleedCap ? "，打出后立即将这张 R 返回手牌" : ""}；结算后流血 ${foe.bleed} → ${Math.floor(foe.bleed / 2)} 层。`;
     }
     if (champion.id === "twistedfate") {
       if (id === "attack") {
@@ -1903,12 +1905,6 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       f.hp / f.maxHp < 0.4
     )
       damage = Math.round(damage * 1.2);
-    if (f.interrupted && run.gear.includes("iceborn")) h.icebornReady = true;
-    if (f.interrupted && run.gear.includes("fimbulwinter")) {
-      const shield = Math.round(h.maxHp * 0.1); h.shield += shield;
-      if (run.augments.includes("shieldBash")) h.shieldBash = Math.round(shield * 0.4);
-      message += ` 末日寒冬获得 ${shield} 点护盾。`;
-    }
     if (champion.id === "darius" && run.gear.includes("cleaver"))
       damage = Math.round(damage * (1 + f.bleed * 0.03 + (f.bleed >= bleedCap ? 0.1 : 0)));
     if (champion.id === "darius" && id === "r" && f.bleed >= bleedCap && run.augments.includes("dunkMaster"))
@@ -1966,7 +1962,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (h.shieldBash > 0) { damage += h.shieldBash; message += ` 盾击 +${h.shieldBash}。`; h.shieldBash = 0; }
       const machineDraw = champion.id === "jinx" && h.weapon === "机枪" && h.minigun >= 3 && run.augments.includes("overclock");
       if (machineDraw && h.drawsTurn < 2) { h.bonusDraw += 1; h.drawsTurn += 1; }
-      if (champion.id === "jinx" && h.weapon === "机枪" && h.minigun >= 3 && run.gear.includes("phantom") && h.attacks % 2 === 0 && h.drawsTurn < 3) { h.bonusDraw += 1; h.drawsTurn += 1; }
+      if (id === "attack" && run.gear.includes("phantom") && h.basicCards % 2 === 0 && h.drawsTurn < 2) { h.bonusDraw += 1; h.drawsTurn += 1; }
       if (run.gear.includes("bork")) damage += Math.max(1, Math.round(f.hp * 0.05));
     }
 
@@ -2011,13 +2007,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         : result === "immune"
           ? "破裂命中，但敌人免疫了本次眩晕。"
           : `破裂命中，韧性压力 ${f.stunProgress}/${maxTenacity}。`;
-      if (result === "stunned" && run.gear.includes("iceborn")) h.icebornReady = true;
     }
     if (champion.id === "cho" && id === "w") {
       damage = Math.round(6 + level * 3 + h.ap * 0.65);
       if (intent.dangerous || intent.buff || intent.heal || intent.shield || intent.charge) {
         f.interrupted = true;
-        if (run.gear.includes("iceborn")) h.icebornReady = true;
         message = "野性尖叫打断特殊行动；敌人本回合改用普攻。";
       } else message = "野性尖叫命中，但基础攻击无法被打断。";
     }
@@ -2043,6 +2037,16 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (f.hp / f.maxHp <= threshold)
         damage = Math.max(damage, f.hp + f.shield);
     }
+    const newlyInterrupted = !interruptedBefore && f.interrupted;
+    const newlyStunned = !stunnedBefore && f.stunned;
+    if ((newlyInterrupted || newlyStunned) && run.gear.includes("iceborn"))
+      h.icebornReady = true;
+    if (newlyInterrupted && run.gear.includes("fimbulwinter")) {
+      const shield = Math.round(h.maxHp * 0.1);
+      h.shield += shield;
+      if (run.augments.includes("shieldBash")) h.shieldBash = Math.round(shield * 0.4);
+      message += ` 末日寒冬获得 ${shield} 点护盾。`;
+    }
     if (!interruptedBefore && f.interrupted && run.augments.includes("disruptor") && !h.disruptorUsed) {
       damage += 16;
       h.energy = Math.min(h.maxEnergy, h.energy + 1);
@@ -2066,7 +2070,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (id === "r" && run.gear.includes("axiom")) {
         h.energy = Math.min(h.maxEnergy, h.energy + 1);
         message += " 公理圆弧恢复 1 能量。";
-        if (champion.id === "jinx" && !h.axiomUsed) {
+        if (!h.axiomUsed) {
           h.axiomUsed = true;
           h.returnUltimate = true;
         }
@@ -2164,7 +2168,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     }
     if (id === "r" && f.hp === 0 && run.augments.includes("feastHeal"))
       h.hp = Math.min(h.maxHp, h.hp + Math.round(h.maxHp * 0.18));
-    if (id === "r" && f.hp === 0 && run.gear.includes("deathdance")) { h.hp = Math.min(h.maxHp, h.hp + Math.round(h.maxHp * 0.16)); f.bonus = 0; }
+    if (id === "r" && f.hp === 0 && run.gear.includes("deathdance")) h.hp = Math.min(h.maxHp, h.hp + Math.round(h.maxHp * 0.16));
     if (id === "r" && f.hp === 0 && run.augments.includes("dunkMaster")) h.bonusDraw += 1;
     if (run.gear.includes("collector") && f.hp > 0 && f.hp / f.maxHp <= 0.08) { f.hp = 0; message += " 收集者处决！"; }
     if (
@@ -2190,6 +2194,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       message += " 盛宴斩杀了非英雄单位，本次不获得永久生命。";
     }
     const returnsDariusUltimate = champion.id === "darius" && id === "r" && f.bleed >= bleedCap;
+    if (champion.id === "darius" && id === "r") {
+      const previousBleed = f.bleed;
+      f.bleed = Math.floor(f.bleed / 2);
+      message += ` 流血 ${previousBleed} → ${f.bleed} 层。`;
+    }
     let nextHand = hand.filter((_, i) => i !== index);
     let nextDiscard = returnsDariusUltimate ? [...discard] : [...discard, id];
     if (returnsDariusUltimate) {
@@ -2207,7 +2216,10 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       const extra = draw(pile, nextDiscard, Math.min(h.bonusDraw, 8 - nextHand.length));
       nextHand = [...nextHand, ...extra.cards]; nextDiscard = extra.discard; setPile(extra.pile); h.bonusDraw = 0;
     }
-    if (h.returnUltimate && !nextHand.includes("r") && nextHand.length < 8) { nextHand.push("r"); h.returnUltimate = false; }
+    if (h.returnUltimate) {
+      if (!nextHand.includes("r") && nextHand.length < 8) nextHand.push("r");
+      h.returnUltimate = false;
+    }
     setHero(h);
     setFoe(f);
     setHand(nextHand);
@@ -2257,7 +2269,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       const basicAction = base.actions.find((action) => action.damage && !action.dangerous) || base.actions.find((action) => action.damage);
       let incoming = Math.max(0, (basicAction?.damage || 6) + f.bonus);
       const bansheeTriggered = h.bansheeReady && incoming > 0;
-      if (bansheeTriggered) { incoming = 0; h.bansheeReady = false; }
+      if (bansheeTriggered) {
+        incoming = 0;
+        h.bansheeReady = false;
+        if (run.gear.includes("lichbane")) h.lichReady = true;
+      }
       const blocked = Math.min(h.shield, incoming), taken = incoming - blocked;
       h.shield -= blocked; h.hp = Math.max(0, h.hp - taken); f.bonus = 0;
       if (champion.id === "tahmkench") h.grayDamage += taken;
@@ -2622,6 +2638,89 @@ function SkillCard({
   );
 }
 
+const attributePoolFor = (run) => {
+  const physical = run.championId === "darius" || run.championId === "jinx";
+  const chapter = route[run.node]?.chapter || 1;
+  return [
+    { id: physical ? "ad" : "ap", icon: "◇", name: physical ? "磨砺武器" : "聆听魔力", text: `永久获得 ${physical ? [3, 4, 5][chapter - 1] : [7, 9, 12][chapter - 1]} 点 ${physical ? "AD" : "AP"}` },
+    { id: "vitality", icon: "♥", name: "抗寒训练", text: `永久获得 ${[10, 14, 18][chapter - 1]} 点最大生命` },
+    { id: "energy", icon: "◈", name: "灵活调度", text: "每场战斗的最大能量与初始能量 +1" },
+    { id: "draw", icon: "▣", name: "整备牌组", text: "每场战斗的初始手牌 +1" },
+    { id: "crit", icon: "✹", name: "寻找破绽", text: `永久获得 ${[8, 10, 12][chapter - 1]}% 暴击率` },
+    { id: "penetration", icon: "➶", name: "破冰锋刃", text: `永久获得 ${[2, 3, 4][chapter - 1]} 点穿甲` },
+  ];
+};
+
+const attributeChoicesFor = (run, source) => attributePoolFor(run)
+  .sort(
+    (a, b) =>
+      seededRewardScore(`${a.id}:${source}:${run.node}`, run.rewardSeed) -
+      seededRewardScore(`${b.id}:${source}:${run.node}`, run.rewardSeed),
+  )
+  .slice(0, 3);
+
+const applyAttributeChoice = (run, choice) => {
+  const chapter = (route[run.node]?.chapter || 1) - 1;
+  const hero = { ...run.hero };
+  if (choice === "ad") hero.ad += [3, 4, 5][chapter];
+  if (choice === "ap") hero.ap += [7, 9, 12][chapter];
+  if (choice === "vitality") {
+    const gain = [10, 14, 18][chapter];
+    hero.maxHp += gain;
+    hero.hp += gain;
+  }
+  if (choice === "energy") hero.energyBonus = (hero.energyBonus || 0) + 1;
+  if (choice === "draw") hero.openingDraw = (hero.openingDraw || 0) + 1;
+  if (choice === "crit") hero.crit = (hero.crit || 0) + [8, 10, 12][chapter];
+  if (choice === "penetration") hero.armorPen = (hero.armorPen || 0) + [2, 3, 4][chapter];
+  return { ...run, hero };
+};
+
+const applyVictoryGrowth = (hero, championId) => {
+  const next = { ...hero };
+  const gainHealth = (amount) => {
+    next.maxHp += amount;
+    next.hp += amount;
+  };
+  if (championId === "cho") { gainHealth(3); next.ap += 1; }
+  if (championId === "darius") { gainHealth(2); next.ad += 1; }
+  if (championId === "twistedfate") next.ap += 2;
+  if (championId === "jinx") { next.ad += 1; next.crit = (next.crit || 0) + 1; }
+  if (championId === "tahmkench") { gainHealth(4); next.ap += 1; }
+  return next;
+};
+
+function AttributeTraining({ run, roll, onBuy, onContinue, onQuit }) {
+  const choices = attributeChoicesFor(run, `training-${roll}`);
+  return (
+    <main className="shop-shell rest-screen attribute-training-screen">
+      <Header run={run} onQuit={onQuit} label="满装属性训练" />
+      <section className="node-heading">
+        <div className="node-symbol warm">✦</div>
+        <div>
+          <div className="eyebrow">ENDGAME TRAINING · ◈ {run.gold}</div>
+          <h1>将溢出金币转化为成长</h1>
+          <p>每项训练消耗18金币；购买后刷新下一组三项，也可以保留金币继续前进。</p>
+        </div>
+      </section>
+      <section className="rest-options">
+        {choices.map((choice) => (
+          <button key={`${choice.id}-${roll}`} disabled={run.gold < 18} onClick={() => onBuy(choice.id)}>
+            <strong>{choice.icon}</strong>
+            <b>{choice.name}</b>
+            <p>{choice.text}</p>
+            <small>◈ 18 · 购买后刷新</small>
+          </button>
+        ))}
+      </section>
+      <div className="node-actions">
+        <span>当前金币 ◈ {run.gold}</span>
+        <button className="skip-gear" onClick={onContinue}>结束训练，继续前进 →</button>
+      </div>
+    </main>
+  );
+}
+
 function GearShop({ run, stock, purchased, onBuy, onContinue, onQuit }) {
   const full = run.gear.length >= 5;
   const noAffordable = stock.every((id) => equipment[id].price > run.gold);
@@ -2702,32 +2801,23 @@ function GearShop({ run, stock, purchased, onBuy, onContinue, onQuit }) {
   );
 }
 
-function SkillReward({ run, onChoose, onQuit }) {
-  const skillSet = championRoster[run.championId || "cho"].skills;
-  const options = useMemo(
-    () =>
-      ["q", "w", "e", "r"]
-        .sort((a, b) => run.upgrades[a] - run.upgrades[b])
-        .slice(0, 3),
-    [run.upgrades],
-  );
+function AttributeReward({ run, onChoose, onQuit }) {
+  const options = attributeChoicesFor(run, "battle-reward");
   return (
-    <main className="reward-screen skill-reward-screen">
-      <Header run={run} onQuit={onQuit} label="技能强化" />
+    <main className="reward-screen skill-reward-screen attribute-reward-screen">
+      <Header run={run} onQuit={onQuit} label="战后成长" />
       <div className="reward-heading">
-        <div className="eyebrow">MASTER YOUR ABILITIES</div>
-        <h1>强化一种英雄技能</h1>
-        <p>牌组不会加入新招式；你只会越来越精通已有技能。</p>
+        <div className="eyebrow">EXPEDITION TRAINING</div>
+        <h1>选择一项永久属性</h1>
+        <p>每场战斗后随机出现三项成长，选择后继续攀登。</p>
       </div>
       <div className="skill-reward-grid">
-        {options.map((id) => (
-          <button key={id} onClick={() => onChoose(id)}>
-            <span>{skillSet[id].key}</span>
-            <b>{skillSet[id].name}</b>
-            <p>{skillSet[id].text}</p>
-            <small>
-              强化 {run.upgrades[id]} → {run.upgrades[id] + 1}
-            </small>
+        {options.map((option) => (
+          <button key={option.id} onClick={() => onChoose(option.id)}>
+            <span>{option.icon}</span>
+            <b>{option.name}</b>
+            <p>{option.text}</p>
+            <small>选择永久强化</small>
           </button>
         ))}
       </div>
@@ -2736,23 +2826,7 @@ function SkillReward({ run, onChoose, onQuit }) {
 }
 
 function Rest({ run, onChoose, onQuit }) {
-  const physical = run.championId === "darius" || run.championId === "jinx";
-  const chapter = route[run.node]?.chapter || 1;
-  const pools = [
-    { id: physical ? "ad" : "ap", icon: "◇", name: physical ? "磨砺武器" : "聆听魔力", text: `永久获得 ${physical ? [3, 4, 5][chapter - 1] : [7, 9, 12][chapter - 1]} 点 ${physical ? "AD" : "AP"}` },
-    { id: "vitality", icon: "♥", name: "抗寒训练", text: `永久获得 ${[10, 14, 18][chapter - 1]} 点最大生命` },
-    { id: "energy", icon: "◈", name: "灵活调度", text: "每场战斗的最大能量与初始能量 +1" },
-    { id: "draw", icon: "▣", name: "整备牌组", text: "每场战斗的初始手牌 +1" },
-    { id: "crit", icon: "✹", name: "寻找破绽", text: `永久获得 ${[8, 10, 12][chapter - 1]}% 暴击率` },
-    { id: "penetration", icon: "➶", name: "破冰锋刃", text: `永久获得 ${[2, 3, 4][chapter - 1]} 点穿甲` },
-  ];
-  const choices = [...pools]
-    .sort(
-      (a, b) =>
-        seededRewardScore(`${a.id}:camp:${run.node}`, run.rewardSeed) -
-        seededRewardScore(`${b.id}:camp:${run.node}`, run.rewardSeed),
-    )
-    .slice(0, 3);
+  const choices = attributeChoicesFor(run, "camp");
   return (
     <main className="shop-shell rest-screen">
       <Header run={run} onQuit={onQuit} label="炉火营地" />
@@ -2840,6 +2914,7 @@ function GameRun({ championId, onQuit }) {
   const [enemyId, setEnemyId] = useState("wolf");
   const [postBattle, setPostBattle] = useState(null);
   const [bought, setBought] = useState(false);
+  const [trainingRoll, setTrainingRoll] = useState(0);
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [screen]);
@@ -2879,10 +2954,11 @@ function GameRun({ championId, onQuit }) {
   }, []);
   const winBattle = (hero, enemy) => {
     const node = route[run.node];
+    const grownHero = applyVictoryGrowth(hero, run.championId);
     if (node.summitBoss) {
       setRun((r) => ({
         ...r,
-        hero: { ...hero, hp: hero.maxHp },
+        hero: { ...grownHero, hp: grownHero.maxHp },
         gold: r.gold + enemy.gold,
         node: r.node + 1,
       }));
@@ -2890,19 +2966,20 @@ function GameRun({ championId, onQuit }) {
       return;
     }
     if (node.finalBoss) {
-      setRun((r) => ({ ...r, hero: { ...hero, hp: hero.maxHp }, gold: r.gold + enemy.gold }));
+      setRun((r) => ({ ...r, hero: { ...grownHero, hp: grownHero.maxHp }, gold: r.gold + enemy.gold }));
       setScreen("victory");
       return;
     }
     setRun((r) => {
       const amp = r.gear.includes("visage") ? 1.5 : 1;
       const recoveryRatio = 0.1 + (r.gear.includes("warmog") ? 0.18 : 0);
-      const recoveredHero = { ...hero, hp: Math.min(hero.maxHp, hero.hp + Math.round(hero.maxHp * recoveryRatio * amp)) };
+      const recoveredHero = { ...grownHero, hp: Math.min(grownHero.maxHp, grownHero.hp + Math.round(grownHero.maxHp * recoveryRatio * amp)) };
       return { ...r, hero: recoveredHero, gold: r.gold + enemy.gold };
     });
     setPostBattle({ augment: !!node.augment, finalBoss: !!enemy.finalBoss });
     setBought(false);
-    setScreen("gear");
+    setTrainingRoll(0);
+    setScreen(run.gear.length >= 5 ? "training" : "gear");
   };
   const buyGear = (item) => {
     setRun((r) => ({
@@ -2929,15 +3006,18 @@ function GameRun({ championId, onQuit }) {
     }
     if (postBattle.finalBoss) setScreen("victory");
     else if (postBattle.augment) setScreen("augment");
-    else setScreen("skill");
+    else setScreen("attribute");
   };
-  const upgradeSkill = (id) => {
+  const chooseAttribute = (id) => {
     setRun((r) => ({
-      ...r,
-      upgrades: { ...r.upgrades, [id]: r.upgrades[id] + 1 },
+      ...applyAttributeChoice(r, id),
       node: r.node + 1,
     }));
     setScreen("map");
+  };
+  const buyTraining = (id) => {
+    setRun((r) => ({ ...applyAttributeChoice(r, id), gold: r.gold - 18 }));
+    setTrainingRoll((roll) => roll + 1);
   };
   const chooseAugment = (item) => {
     setRun((r) => {
@@ -2959,22 +3039,7 @@ function GameRun({ championId, onQuit }) {
     setScreen("map");
   };
   const rest = (choice) => {
-    setRun((r) => {
-      const chapter = (route[r.node]?.chapter || 1) - 1;
-      const hero = { ...r.hero };
-      if (choice === "ad") hero.ad += [3, 4, 5][chapter];
-      if (choice === "ap") hero.ap += [7, 9, 12][chapter];
-      if (choice === "vitality") {
-        const gain = [10, 14, 18][chapter];
-        hero.maxHp += gain;
-        hero.hp += gain;
-      }
-      if (choice === "energy") hero.energyBonus = (hero.energyBonus || 0) + 1;
-      if (choice === "draw") hero.openingDraw = (hero.openingDraw || 0) + 1;
-      if (choice === "crit") hero.crit = (hero.crit || 0) + [8, 10, 12][chapter];
-      if (choice === "penetration") hero.armorPen = (hero.armorPen || 0) + [2, 3, 4][chapter];
-      return { ...r, hero, node: r.node + 1 };
-    });
+    setRun((r) => ({ ...applyAttributeChoice(r, choice), node: r.node + 1 }));
     setScreen("map");
   };
 
@@ -3002,8 +3067,10 @@ function GameRun({ championId, onQuit }) {
         onQuit={onQuit}
       />
     );
-  if (screen === "skill")
-    return <SkillReward run={run} onChoose={upgradeSkill} onQuit={onQuit} />;
+  if (screen === "attribute")
+    return <AttributeReward run={run} onChoose={chooseAttribute} onQuit={onQuit} />;
+  if (screen === "training")
+    return <AttributeTraining run={run} roll={trainingRoll} onBuy={buyTraining} onContinue={afterGear} onQuit={onQuit} />;
   if (screen === "augment")
     return <Augment run={run} onChoose={chooseAugment} onQuit={onQuit} />;
   if (screen === "rest")
