@@ -1318,7 +1318,7 @@ function Map({ run, onChoose, onQuit }) {
   );
   useEffect(() => {
     if (!current) return undefined;
-    const timer = setTimeout(() => onChoose(current), 2800);
+    const timer = setTimeout(() => onChoose(current), 2100);
     return () => clearTimeout(timer);
   }, [current, onChoose]);
   return (

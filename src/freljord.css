@@ -3582,7 +3582,7 @@ button {
   pointer-events: none;
   offset-path: path("M 0 0 H 1000");
   offset-distance: var(--walker-to-x);
-  animation: heroWalkDesktop 2.35s ease-in-out both;
+  animation: heroWalkDesktop 1.8s ease-in-out both;
 }
 .route-hero-walker img {
   width: 100%;
@@ -3840,7 +3840,7 @@ button {
     width: 44px;
     height: 44px;
     offset-path: none;
-    animation: heroWalkMobile 2.5s ease-in-out both;
+    animation: heroWalkMobile 1.9s ease-in-out both;
     will-change: transform;
     backface-visibility: hidden;
   }
