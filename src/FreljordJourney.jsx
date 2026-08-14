@@ -75,6 +75,17 @@ const starterDeck = [...baseStarterDeck];
 // 玩家所有直接伤害与卡牌预览共用该倍率，确保显示数值与实际结算一致。
 const HERO_DAMAGE_SCALE = 0.35;
 
+const APHELIOS_WEAPON_ORDER = ["calibrum", "severum", "gravitum", "infernum", "crescendum"];
+const APHELIOS_WEAPONS = {
+  calibrum: { name: "通碧", qName: "月闪", color: "#65d3c3", qImage: "/game-icons/aphelios-q-calibrum.png" },
+  severum: { name: "断魄", qName: "对影", color: "#d95c69", qImage: "/game-icons/aphelios-q-severum.png" },
+  gravitum: { name: "坠明", qName: "暗蚀", color: "#9871d6", qImage: "/game-icons/aphelios-q-gravitum.png" },
+  infernum: { name: "荧焰", qName: "暝涌", color: "#5d9fe8", qImage: "/game-icons/aphelios-q-infernum.png" },
+  crescendum: { name: "折镜", qName: "驻灵", color: "#e8edf5", qImage: "/game-icons/aphelios-q-crescendum.png" },
+};
+const APHELIOS_INITIAL_AMMO = Object.fromEntries(APHELIOS_WEAPON_ORDER.map((weapon) => [weapon, 7]));
+const apheliosWeaponName = (weapon) => APHELIOS_WEAPONS[weapon]?.name || weapon;
+
 const tahmExecuteRatio = (level, isBoss, fullTaste) => {
   const baseRatio = isBoss
     ? Math.min(0.12, 0.06 + level * 0.015)
@@ -432,8 +443,8 @@ const championRoster = {
     ap: 0,
     color: "#8db8d9",
     mechanic: "月相轮转",
-    description: "管理主副武器与7层弹药，用Q传递印记，再以W切换组合。",
-    builds: ["红白续航", "白绿飞轮", "紫蓝控场"],
+    description: "管理通碧、断魄、坠明、荧焰、折镜的7发弹药；武器队列会跨战斗延续。",
+    builds: ["断魄折镜续航", "折镜通碧飞轮", "坠明荧焰控场"],
     preferredTags: ["普攻", "连招", "持续"],
     skills: {
       attack: {
@@ -449,7 +460,7 @@ const championRoster = {
         typeName: "技能",
         cost: 1,
         icon: "☾",
-        text: "消耗主武器2层弹药，施放主武器Q并触发副武器印记。",
+        text: "消耗1能量与主武器2发弹药，施放该武器的专属Q；随后可用W切枪衔接副武器Q。",
       },
       w: {
         id: "w",
@@ -457,9 +468,9 @@ const championRoster = {
         name: "武器切换",
         type: "spell",
         typeName: "技能",
-        cost: 1,
+        cost: 0,
         icon: "⇄",
-        text: "主武器与副武器交换；目标身上的武器印记不会消失。",
+        text: "无消耗交换主副武器；若刚使用过主武器Q，立即将副武器Q加入手牌。",
       },
       r: {
         id: "r",
@@ -507,9 +518,9 @@ const championBuilds = {
     { id: "riven_lethality", name: "疾风穿甲", items: ["youmuu", "serylda", "collector", "axiom", "deathdance", "essence"] },
   ],
   aphelios: [
-    { id: "aphelios_redwhite", name: "红白续航", items: ["bork", "bloodthirster", "phantom", "essence", "trinity", "deathdance"] },
-    { id: "aphelios_whitegreen", name: "白绿飞轮", items: ["kraken", "infinity", "collector", "essence", "phantom", "youmuu"] },
-    { id: "aphelios_control", name: "紫蓝控场", items: ["shojin", "hexplate", "serylda", "phantom", "deathdance", "essence"] },
+    { id: "aphelios_redwhite", name: "断魄折镜续航", items: ["bork", "bloodthirster", "phantom", "essence", "trinity", "deathdance"] },
+    { id: "aphelios_whitegreen", name: "折镜通碧飞轮", items: ["kraken", "infinity", "collector", "essence", "phantom", "youmuu"] },
+    { id: "aphelios_control", name: "坠明荧焰控场", items: ["shojin", "hexplate", "serylda", "phantom", "deathdance", "essence"] },
   ],
   cho: [
     { id: "cho_tank", name: "心钢巨兽", items: ["heartsteel", "sunfire", "titanic", "jaksho", "warmog", "frozenheart"] },
@@ -530,7 +541,7 @@ const championGuides = {
   jinx: { loop: "机枪连续普攻叠至3层后开始抽牌循环；需要爆发时用Q切换火箭，W与R负责远程收割。", control: "E嚼火者是眩晕：敌人本回合完全无法行动；赛瑞尔达强化的W只是打断。", warning: "金克斯牌组只保留1张切枪Q，其余替换为A普攻；机枪抽牌每回合有上限，破败与饮血剑提供续航。" },
   tahmkench: { loop: "普攻叠1层、W叠2层品味；满层后在Q控制与R强化吞噬之间取舍，E在敌方行动前刷新临时护盾。", control: "满3层Q消耗品味并施加1点韧性压力；普通敌人立即眩晕，精英与BOSS需要累计2点。W只在危险行动时打断。", warning: "E护盾不能跨敌方行动保留或重复叠加；满层R伤害提高50%并提高斩杀线。" },
   riven: { loop: "技能获得符文充能，A消耗充能追加伤害；Q前两段回手，第三段打断。E减免下一张Q，三段Q与穿插A总计恰好消耗3能量。", control: "Q3稳定打断特殊行动，敌人仍会改用普攻；W需要先积攒2层符文充能才能施加1点韧性压力。", warning: "R第一段提高20%AD并变为疾风斩；两回合内不打出疾风斩，强化与二段R都会消失。" },
-  aphelios: { loop: "普攻消耗主武器弹药，Q消耗2层并触发副武器印记；W交换主副武器，规划印记与下一轮弹药。", control: "绿刀A引爆绿印并发射白刀飞轮；紫刀A铺印记、Q消耗印记眩晕；蓝刀A/Q逐层施加致盲。", warning: "每把武器7层弹药；主武器耗尽后自动轮转。印记在W后保留，但不因切换自动刷新。" },
+  aphelios: { loop: "A消耗主武器1发弹药，Q消耗1能量与2发弹药；Q后用无消耗W切至副武器，立刻获得副武器Q。", control: "通碧A引爆月闪印记并发射折镜飞轮；坠明A铺印记、暗蚀消耗印记眩晕；荧焰A/Q逐层施加致盲。", warning: "初始顺序为通碧→断魄→坠明→荧焰→折镜；弹药、主副武器和后备队列跨战斗保留，耗尽的武器补满7发后进入队尾。" },
 };
 
 const equipment = {
@@ -1097,7 +1108,7 @@ const augments = [
     name: "技能电容",
     rarity: "黄金",
     icon: "△",
-    excludedChampions: ["jinx", "riven"],
+    excludedChampions: ["jinx", "riven", "aphelios"],
     text: "Q 的能量消耗降低 1，最低为 0。",
   },
   {
@@ -1180,6 +1191,12 @@ const defaultRun = (championId = "cho") => {
       ad: champion.ad,
       ap: champion.ap,
       feast: 0,
+      ...(championId === "aphelios" ? {
+        aphMainWeapon: "calibrum",
+        aphOffWeapon: "severum",
+        aphWeaponQueue: ["gravitum", "infernum", "crescendum"],
+        aphAmmo: { ...APHELIOS_INITIAL_AMMO },
+      } : {}),
     },
     gold: 8,
     deck: [...championDeck],
@@ -1676,11 +1693,12 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     rivenEmpoweredAttacksTurn: 0,
     lightspeedUsed: false,
     valorStrike: 0,
-    aphMainWeapon: "绿刀",
-    aphOffWeapon: "紫刀",
-    aphWeaponQueue: ["红刀", "蓝刀", "白刀"],
-    aphAmmo: { "绿刀": 7, "红刀": 7, "紫刀": 7, "蓝刀": 7, "白刀": 7 },
+    aphMainWeapon: run.hero.aphMainWeapon || "calibrum",
+    aphOffWeapon: run.hero.aphOffWeapon || "severum",
+    aphWeaponQueue: [...(run.hero.aphWeaponQueue || ["gravitum", "infernum", "crescendum"])],
+    aphAmmo: { ...(run.hero.aphAmmo || APHELIOS_INITIAL_AMMO) },
     aphChakrams: 0,
+    aphQSwapReady: false,
   });
   const [foe, setFoe] = useState({
     hp: base.hp,
@@ -1696,7 +1714,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     controlWard: false,
     silenced: false,
     bleed: 0,
-    apheliosMarks: { "绿刀": 0, "红刀": 0, "紫刀": 0, "蓝刀": 0, "白刀": 0 },
+    apheliosMarks: Object.fromEntries(APHELIOS_WEAPON_ORDER.map((weapon) => [weapon, 0])),
     apheliosBlind: 0,
     taste: 0,
     marked: false,
@@ -1720,7 +1738,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
 
   const cardCost = (id, state = hero) => {
     let cost = skillSet[id].cost;
-    if (id === "q" && run.augments.includes("quickRupture")) cost = Math.max(0, cost - 1);
+    if (id === "q" && champion.id !== "aphelios" && run.augments.includes("quickRupture")) cost = Math.max(0, cost - 1);
     if (champion.id === "riven" && id === "r" && state.windSlashReady) cost = 1;
     if (champion.id === "riven" && state.valorDiscount && id === "q")
       cost = Math.max(0, cost - 1);
@@ -1886,31 +1904,34 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     if (champion.id === "aphelios") {
       const main = hero.aphMainWeapon;
       const off = hero.aphOffWeapon;
+      const mainWeapon = APHELIOS_WEAPONS[main];
+      const offWeapon = APHELIOS_WEAPONS[off];
       const ammo = hero.aphAmmo?.[main] || 0;
       const marks = foe.apheliosMarks || {};
       if (id === "attack") {
-        const bonus = main === "绿刀" && marks["绿刀"] ? Math.round(10 + hero.ad * 0.55) : 0;
-        const chakramDamage = main === "绿刀" && hero.aphChakrams > 0
+        const bonus = main === "calibrum" && marks.calibrum ? Math.round(10 + hero.ad * 0.55) : 0;
+        const chakramDamage = main === "calibrum" && marks.calibrum && hero.aphChakrams > 0
           ? hero.aphChakrams * Math.round(4 + hero.ad * 0.25)
           : 0;
-        return `消耗${main}1层弹药（剩余${Math.max(0, ammo - 1)}），造成 ${previewDamage(id, hero.ad + level * 2 + bonus + chakramDamage)} 点伤害${bonus ? `，引爆绿刀印记并发射${hero.aphChakrams}枚飞轮` : ""}${main === "紫刀" ? "，施加紫刀印记" : main === "蓝刀" ? "，施加1层致盲" : ""}。`;
+        return `消耗${mainWeapon.name}1发弹药（剩余${Math.max(0, ammo - 1)}），造成 ${previewDamage(id, hero.ad + level * 2 + bonus + chakramDamage)} 点伤害${bonus ? `，引爆通碧印记并发射${hero.aphChakrams}枚飞轮` : ""}${main === "gravitum" ? "，施加1层坠明印记" : main === "infernum" ? "，施加1层致盲（最多3层）" : main === "crescendum" ? `，获得1枚折镜飞轮（${Math.min(6, hero.aphChakrams + 1)}/6）` : ""}。`;
       }
       if (id === "q") {
-        const raw = main === "绿刀"
+        const raw = main === "calibrum"
           ? 8 + hero.ad * 0.7 + level * 3
-          : main === "红刀"
+          : main === "severum"
             ? 6 + hero.ad * 0.5 + level * 2
-            : main === "紫刀"
+            : main === "gravitum"
               ? 6 + hero.ad * 0.45 + level * 2
-              : main === "蓝刀"
+              : main === "infernum"
                 ? 7 + hero.ad * 0.6 + level * 2.5
                 : 8 + hero.ad * 0.65 + level * 3 + hero.aphChakrams * (4 + hero.ad * 0.25);
-        const offText = main === "绿刀" ? `挂${off}印记` : main === "红刀" ? `吸血并挂${off}印记×3` : main === "紫刀" ? (marks["紫刀"] ? "消耗紫刀印记并眩晕" : "需要紫刀印记才能眩晕") : main === "蓝刀" ? `施加致盲并挂${off}印记` : `飞轮命中并挂${off}印记`;
-        return `消耗${main}2层弹药（剩余${Math.max(0, ammo - 2)}），造成 ${previewDamage(id, Math.round(raw))} 点伤害；${offText}。`;
+        const severumHealing = Math.min(hero.maxHp - hero.hp, Math.round(hero.maxHp * 0.08));
+        const offText = main === "calibrum" ? `施加通碧与${offWeapon.name}印记` : main === "severum" ? `恢复${severumHealing}生命并施加${offWeapon.name}印记×3` : main === "gravitum" ? (marks.gravitum ? "消耗1层坠明印记并眩晕" : "需要坠明印记才能眩晕") : main === "infernum" ? `施加1层致盲与${offWeapon.name}印记` : `驱动${hero.aphChakrams}枚飞轮并施加${offWeapon.name}印记`;
+        return `${mainWeapon.qName}：消耗1能量与${mainWeapon.name}2发弹药（剩余${Math.max(0, ammo - 2)}），造成 ${previewDamage(id, Math.round(raw))} 点伤害；${offText}。Q后可用W立刻衔接副武器Q。`;
       }
-      if (id === "w") return `交换主武器${main}与副武器${off}，不清除目标身上的武器印记。`;
-      const raw = main === "绿刀" ? 14 + hero.ad * 0.9 + level * 4 + hero.aphChakrams * (4 + hero.ad * 0.25) : 12 + hero.ad * 0.9 + level * 4;
-      return `月蚀以${main}终结，造成 ${previewDamage(id, Math.round(raw))} 点伤害；不触发副武器且不消耗弹药。`;
+      if (id === "w") return `无消耗交换主武器${mainWeapon.name}与副武器${offWeapon.name}${hero.aphQSwapReady ? `，并立即将${offWeapon.qName}加入手牌` : ""}；武器印记保留。`;
+      const raw = main === "calibrum" ? 14 + hero.ad * 0.9 + level * 4 + hero.aphChakrams * (4 + hero.ad * 0.25) : 12 + hero.ad * 0.9 + level * 4;
+      return `月蚀以${mainWeapon.name}终结，造成 ${previewDamage(id, Math.round(raw))} 点伤害；不触发副武器且不消耗弹药。`;
     }
     if (champion.id === "riven") {
       if (id === "attack") {
@@ -2179,6 +2200,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     if (champion.id === "aphelios") {
       const main = h.aphMainWeapon;
       const off = h.aphOffWeapon;
+      const mainName = apheliosWeaponName(main);
+      const offName = apheliosWeaponName(off);
       const marks = { ...(f.apheliosMarks || {}) };
       const addMark = (weapon, count = 1) => { marks[weapon] = Math.min(3, (marks[weapon] || 0) + count); };
       const consumeMark = (weapon) => { if ((marks[weapon] || 0) > 0) { marks[weapon] -= 1; return true; } return false; };
@@ -2186,51 +2209,57 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (id === "attack") {
         damage = h.ad + level * 2;
         consumeAmmo(1);
-        if (main === "绿刀" && consumeMark("绿刀")) {
+        if (main === "calibrum" && consumeMark("calibrum")) {
           const bonus = Math.round(10 + h.ad * 0.55);
           damage += bonus;
           if (h.aphChakrams > 0) {
             const volley = h.aphChakrams * Math.round(4 + h.ad * 0.25);
             damage += volley;
-            message += ` 引爆绿刀印记并发射${h.aphChakrams}枚飞轮（+${volley}）。`;
+            message += ` 引爆通碧印记并发射${h.aphChakrams}枚折镜飞轮（+${volley}）。`;
             h.aphChakrams = 0;
-          } else message += ` 引爆绿刀印记（+${bonus}）。`;
+          } else message += ` 引爆通碧印记（+${bonus}）。`;
         }
-        if (main === "紫刀") { addMark("紫刀"); message += " 施加1层紫刀印记。"; }
-        if (main === "蓝刀") { f.apheliosBlind = Math.min(3, (f.apheliosBlind || 0) + 1); message += ` 施加1层致盲（${f.apheliosBlind}/3）。`; }
-        if (main === "白刀") { h.aphChakrams = Math.min(6, h.aphChakrams + 1); message += ` 获得1枚飞轮（${h.aphChakrams}/6）。`; }
+        if (main === "gravitum") { addMark("gravitum"); message += " 施加1层坠明印记。"; }
+        if (main === "infernum") { f.apheliosBlind = Math.min(3, (f.apheliosBlind || 0) + 1); message += ` 荧焰施加1层致盲（${f.apheliosBlind}/3）。`; }
+        if (main === "crescendum") { h.aphChakrams = Math.min(6, h.aphChakrams + 1); message += ` 获得1枚折镜飞轮（${h.aphChakrams}/6）。`; }
       }
       if (id === "q") {
         consumeAmmo(2);
-        if (main === "绿刀") { damage = Math.round(8 + h.ad * 0.7 + level * 3); addMark("绿刀"); addMark(off); message += ` 施加绿刀印记，并挂${off}印记。`; }
-        if (main === "红刀") {
+        h.aphQSwapReady = true;
+        if (main === "calibrum") { damage = Math.round(8 + h.ad * 0.7 + level * 3); addMark("calibrum"); addMark(off); message += ` 月闪施加通碧印记，并施加${offName}印记。`; }
+        if (main === "severum") {
           damage = Math.round(6 + h.ad * 0.5 + level * 2);
           const healing = Math.min(h.maxHp - h.hp, Math.round(h.maxHp * 0.08));
           h.hp += healing;
           addMark(off, 3);
-          message += ` 持续吸血恢复${healing}生命，并挂${off}印记×3。`;
+          message += ` 对影持续吸血恢复${healing}生命，并施加${offName}印记×3。`;
         }
-        if (main === "紫刀") {
+        if (main === "gravitum") {
           damage = Math.round(6 + h.ad * 0.45 + level * 2);
-          if (consumeMark("紫刀")) {
+          if (consumeMark("gravitum")) {
             const result = attemptStun(f, 2);
-            message += result === "stunned" ? " 消耗紫刀印记并眩晕敌人！" : result === "immune" ? " 消耗紫刀印记，但控制被免疫。" : ` 消耗紫刀印记，韧性压力 ${f.stunProgress}/${maxTenacity}。`;
-          } else message += " 当前没有紫刀印记，无法眩晕。";
+            message += result === "stunned" ? " 暗蚀消耗坠明印记并眩晕敌人！" : result === "immune" ? " 暗蚀消耗坠明印记，但控制被免疫。" : ` 暗蚀消耗坠明印记，韧性压力 ${f.stunProgress}/${maxTenacity}。`;
+          } else message += " 当前没有坠明印记，暗蚀无法眩晕。";
           addMark(off);
         }
-        if (main === "蓝刀") { damage = Math.round(7 + h.ad * 0.6 + level * 2.5); f.apheliosBlind = Math.min(3, (f.apheliosBlind || 0) + 1); addMark(off); message += ` 施加1层致盲（${f.apheliosBlind}/3），并挂${off}印记。`; }
-        if (main === "白刀") {
+        if (main === "infernum") { damage = Math.round(7 + h.ad * 0.6 + level * 2.5); f.apheliosBlind = Math.min(3, (f.apheliosBlind || 0) + 1); addMark(off); message += ` 暝涌施加1层致盲（${f.apheliosBlind}/3），并施加${offName}印记。`; }
+        if (main === "crescendum") {
           const count = h.aphChakrams;
           damage = Math.round(8 + h.ad * 0.65 + level * 3 + count * (4 + h.ad * 0.25));
-          if (count > 0) { h.aphChakrams = 0; addMark(off, Math.min(3, count)); message += ` ${count}枚飞轮命中并挂${off}印记。`; }
-          else message += " 当前没有飞轮。";
+          if (count > 0) { h.aphChakrams = 0; addMark(off, Math.min(3, count)); message += ` 驻灵驱动${count}枚飞轮命中并施加${offName}印记。`; }
+          else message += " 驻灵启动，但当前没有飞轮。";
         }
       }
-      if (id === "w") { [h.aphMainWeapon, h.aphOffWeapon] = [h.aphOffWeapon, h.aphMainWeapon]; message = `武器切换：${h.aphMainWeapon}主手，${h.aphOffWeapon}副手。印记保留。`; }
+      if (id === "w") {
+        [h.aphMainWeapon, h.aphOffWeapon] = [h.aphOffWeapon, h.aphMainWeapon];
+        h.aphGrantQ = h.aphQSwapReady;
+        h.aphQSwapReady = false;
+        message = `武器切换：${apheliosWeaponName(h.aphMainWeapon)}主手，${apheliosWeaponName(h.aphOffWeapon)}副手。${h.aphGrantQ ? `${APHELIOS_WEAPONS[h.aphMainWeapon].qName}立即加入手牌。` : ""}`;
+      }
       if (id === "r") {
         damage = Math.round(12 + h.ad * 0.9 + level * 4);
-        if (main === "绿刀" && h.aphChakrams > 0) { damage += h.aphChakrams * Math.round(4 + h.ad * 0.25); message += ` 月蚀引爆${h.aphChakrams}枚飞轮。`; h.aphChakrams = 0; }
-        message += ` 以${main}主手完成终结，不触发副武器。`;
+        if (main === "calibrum" && h.aphChakrams > 0) { damage += h.aphChakrams * Math.round(4 + h.ad * 0.25); message += ` 月蚀引爆${h.aphChakrams}枚折镜飞轮。`; h.aphChakrams = 0; }
+        message += ` 以${mainName}主手完成终结，不触发副武器。`;
       }
       f.apheliosMarks = marks;
       if ((id === "attack" || id === "q") && (h.aphAmmo[h.aphMainWeapon] || 0) === 0) {
@@ -2241,7 +2270,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         h.aphMainWeapon = nextMain;
         h.aphOffWeapon = nextOff;
         h.aphWeaponQueue = [...nextQueue, previousMain];
-        message += ` ${previousMain}弹药耗尽，自动轮转为${nextMain}主手、${nextOff}副手。`;
+        h.aphAmmo = { ...h.aphAmmo, [previousMain]: 7 };
+        message += ` ${apheliosWeaponName(previousMain)}弹药耗尽并补充至7发，进入队尾；轮转为${apheliosWeaponName(nextMain)}主手、${apheliosWeaponName(nextOff)}副手。`;
       }
     }
     if (champion.id === "riven") {
@@ -2658,6 +2688,12 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       nextHand.push("r");
       message += " 放逐之锋返回手牌并变为疾风斩。";
     }
+    if (h.aphGrantQ) {
+      const discardedQ = nextDiscard.lastIndexOf("q");
+      if (discardedQ >= 0) nextDiscard.splice(discardedQ, 1);
+      if (nextHand.length < 8) nextHand.push("q");
+      h.aphGrantQ = false;
+    }
     if (h.destinyDraw) {
       const extra = draw(pile, nextDiscard, Math.min(h.destinyDraw, 8 - nextHand.length));
       nextHand = [...nextHand, ...extra.cards];
@@ -2701,6 +2737,12 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               openingDraw: h.openingDraw || 0,
               victoryRecoveryBonus: h.victoryRecoveryBonus || 0,
               openingShieldBonus: h.openingShieldBonus || 0,
+              ...(champion.id === "aphelios" ? {
+                aphMainWeapon: h.aphMainWeapon,
+                aphOffWeapon: h.aphOffWeapon,
+                aphWeaponQueue: [...h.aphWeaponQueue],
+                aphAmmo: { ...h.aphAmmo },
+              } : {}),
             },
             base,
           ),
@@ -2919,6 +2961,12 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               openingDraw: h.openingDraw || 0,
               victoryRecoveryBonus: h.victoryRecoveryBonus || 0,
               openingShieldBonus: h.openingShieldBonus || 0,
+              ...(champion.id === "aphelios" ? {
+                aphMainWeapon: h.aphMainWeapon,
+                aphOffWeapon: h.aphOffWeapon,
+                aphWeaponQueue: [...h.aphWeaponQueue],
+                aphAmmo: { ...h.aphAmmo },
+              } : {}),
             },
             base,
           ),
@@ -2933,10 +2981,16 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
   const interrupted = foe.interrupted ||
     (foe.silenced && (intent.buff || intent.heal || intent.shield || intent.charge));
   const controlled = foe.stunned || interrupted;
+  const apheliosActiveMarks = champion.id === "aphelios"
+    ? APHELIOS_WEAPON_ORDER.filter((weapon) => (foe.apheliosMarks?.[weapon] || 0) > 0)
+    : [];
   const displayedSkill = (id) => {
     if (champion.id === "aphelios") {
-      if (id === "q") return { ...skillSet[id], name: `${hero.aphMainWeapon}Q` };
-      if (id === "w") return { ...skillSet[id], name: `切换至${hero.aphOffWeapon}` };
+      if (id === "q") {
+        const weapon = APHELIOS_WEAPONS[hero.aphMainWeapon];
+        return { ...skillSet[id], name: `${weapon.name} · ${weapon.qName}`, image: weapon.qImage };
+      }
+      if (id === "w") return { ...skillSet[id], name: `切换至${apheliosWeaponName(hero.aphOffWeapon)}` };
       return skillSet[id];
     }
     if (champion.id !== "riven") return skillSet[id];
@@ -2990,8 +3044,17 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
             {champion.id === "riven" && <span className={hero.runeCharge >= 2 ? "ready-status" : ""}>◇ 符文充能 {hero.runeCharge}/3 · 下一段Q：{hero.qStage + 1}</span>}
             {champion.id === "riven" && hero.valorDiscount && <span className="ready-status">⬡ 下一张Q消耗 -1</span>}
             {champion.id === "riven" && hero.windSlashReady && <span className="ready-status">◆ 疾风斩就绪 · 剩余 {hero.bladeTurns} 回合</span>}
-            {champion.id === "aphelios" && <span className="ready-status">☾ 主手 {hero.aphMainWeapon} {hero.aphAmmo[hero.aphMainWeapon]}/7 · 副手 {hero.aphOffWeapon} {hero.aphAmmo[hero.aphOffWeapon]}/7</span>}
-            {champion.id === "aphelios" && <span>◇ 飞轮 {hero.aphChakrams}/6 · 印记：绿{foe.apheliosMarks?.["绿刀"] || 0} 红{foe.apheliosMarks?.["红刀"] || 0} 紫{foe.apheliosMarks?.["紫刀"] || 0} 蓝{foe.apheliosMarks?.["蓝刀"] || 0}</span>}
+            {champion.id === "aphelios" && (
+              <span className="aphelios-weapons-status ready-status">
+                {[hero.aphMainWeapon, hero.aphOffWeapon].map((weapon, index) => (
+                  <i className="aphelios-weapon-entry" key={`${weapon}-${index}`}>
+                    <em className="aphelios-weapon-orb" style={{ "--weapon-color": APHELIOS_WEAPONS[weapon].color }} />
+                    {index === 0 ? "主" : "副"} · {APHELIOS_WEAPONS[weapon].name} {hero.aphAmmo[weapon]}/7
+                  </i>
+                ))}
+              </span>
+            )}
+            {champion.id === "aphelios" && apheliosActiveMarks.length > 0 && <span>印记：{apheliosActiveMarks.map((weapon) => `${APHELIOS_WEAPONS[weapon].name}×${foe.apheliosMarks[weapon]}`).join(" · ")}</span>}
             {hero.temporaryShield > 0 && <span>◫ 临时护盾 {hero.temporaryShield} · 敌方行动后消失</span>}
             {hero.crit > 0 && <span>✹ 暴击 {hero.crit}% · 蓄积 {hero.critMeter}/100</span>}
             {hero.armorPen > 0 && <span>➶ 穿甲 {hero.armorPen}</span>}
@@ -3072,6 +3135,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               text={skillPreview(id)}
               level={run.upgrades[id]}
               cost={cardCost(id)}
+              status={champion.id === "aphelios" && hero.aphChakrams > 0 && (id === "attack" || id === "q") ? `折镜飞轮 ×${hero.aphChakrams}` : null}
               disabled={hero.energy < cardCost(id)}
               onClick={() => {
                 if (champion.id === "twistedfate" && id === "w") setCardChoice({ index: i });
@@ -3134,6 +3198,7 @@ function SkillCard({
   level,
   disabled,
   onClick,
+  status,
   cost = skill.cost,
 }) {
   return (
@@ -3149,6 +3214,7 @@ function SkillCard({
       <small>
         {skill.typeName} · 强化 {level}
       </small>
+      {status && <em className="card-combat-status">{status}</em>}
       <p>{text}</p>
     </button>
   );
