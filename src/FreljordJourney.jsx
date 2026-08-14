@@ -109,6 +109,8 @@ const deckMatchesProfile = (deck, profile) => {
 // 玩家所有直接伤害与卡牌预览共用该倍率，确保显示数值与实际结算一致。
 const HERO_DAMAGE_SCALE = 0.35;
 const BATTLE_VICTORY_TRANSITION_MS = 1000;
+const BLOODTHIRSTER_LIFESTEAL = 0.18;
+const BLOODTHIRSTER_MAX_SHIELD_RATIO = 0.12;
 
 const APHELIOS_WEAPON_ORDER = ["calibrum", "severum", "gravitum", "infernum", "crescendum"];
 const APHELIOS_WEAPONS = {
@@ -734,7 +736,7 @@ const equipment = {
   infinity: { id: "infinity", name: "无尽之刃", price: 38, image: "/game-icons/infinity.png", ad: 6, crit: 25, tags: ["暴击", "终结"], routes: ["darius_crit", "jinx_crit"], text: "暴击伤害从 175% 提高到 225%。" },
   essence: { id: "essence", name: "夺萃之镰", price: 29, image: "/game-icons/essence.png", ad: 4, crit: 18, tags: ["暴击", "抽牌"], routes: ["darius_crit", "jinx_draw"], text: "每回合第一次普攻暴击时，恢复 1 能量并抽 1 张牌。" },
   bork: { id: "bork", name: "破败王者之刃", price: 27, image: "/game-icons/bork.png", ad: 3, tags: ["机枪", "普攻", "恢复"], routes: ["jinx_draw"], text: "普攻额外造成敌人当前生命5%的伤害，并恢复本次普攻伤害的15%。" },
-  bloodthirster: { id: "bloodthirster", name: "饮血剑", price: 32, image: "/game-icons/bloodthirster.png", ad: 5, crit: 18, tags: ["暴击", "恢复", "护盾"], routes: ["jinx_draw", "jinx_crit"], text: "普攻恢复所造成伤害的25%；满生命时治疗转化为护盾，最多为最大生命20%。" },
+  bloodthirster: { id: "bloodthirster", name: "饮血剑", price: 32, image: "/game-icons/bloodthirster.png", ad: 5, crit: 18, tags: ["暴击", "恢复", "护盾"], routes: ["jinx_draw", "jinx_crit"], text: "普攻恢复所造成伤害的18%；满生命时治疗转化为临时护盾，最多为最大生命12%，持续至本次敌方行动结束。" },
   phantom: { id: "phantom", name: "幻影之舞", price: 26, image: "/game-icons/phantom.png", crit: 18, tags: ["普攻", "暴击", "抽牌"], routes: ["jinx_draw", "jinx_crit"], text: "每打出第 2 张 A，抽 1 张牌；每回合最多触发 2 次。" },
   kraken: { id: "kraken", name: "海妖杀手", price: 29, image: "/game-icons/kraken.png", ad: 4, tags: ["机枪", "普攻"], routes: ["jinx_draw"], text: "每第 3 次普攻额外造成 14+AD×0.8 伤害。" },
   manamune: { id: "manamune", name: "魔宗", price: 26, image: "/game-icons/manamune.png", ad: 3, tags: ["穿甲", "施法"], routes: ["jinx_poke"], text: "W 与 R 额外造成当前剩余能量×4的伤害；每场第 3 次施法后抽 1 张牌。" },
@@ -1693,6 +1695,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     ...run.hero,
     ap: combatAp,
     shield: startingShield,
+    bloodthirsterShield: 0,
     temporaryShield: 0,
     energy: 3 + runeEnergy + campEnergy,
     maxEnergy: 3 + runeEnergy + campEnergy,
@@ -2756,14 +2759,21 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         setTimeout(() => setDamagePopup(null), 850);
       }
       if (isBasicAttack && (run.gear.includes("bork") || run.gear.includes("bloodthirster"))) {
-        const ratio = run.gear.includes("bloodthirster") ? 0.25 : 0.15;
+        const ratio = run.gear.includes("bloodthirster") ? BLOODTHIRSTER_LIFESTEAL : 0.15;
         const healing = Math.max(1, Math.round(result.dealt * ratio));
         const missing = h.maxHp - h.hp;
         const healed = Math.min(missing, healing);
         h.hp += healed;
         const overflow = healing - healed;
-        if (overflow > 0 && run.gear.includes("bloodthirster")) h.shield = Math.min(Math.round(h.maxHp * 0.2), h.shield + overflow);
-        message += ` 吸血恢复 ${healed}${overflow > 0 ? `，溢出护盾 +${overflow}` : ""}。`;
+        let shieldGranted = 0;
+        if (overflow > 0 && run.gear.includes("bloodthirster")) {
+          const shieldCap = Math.round(h.maxHp * BLOODTHIRSTER_MAX_SHIELD_RATIO);
+          const available = Math.max(0, shieldCap - (h.bloodthirsterShield || 0));
+          shieldGranted = Math.min(available, overflow);
+          h.shield += shieldGranted;
+          h.bloodthirsterShield = (h.bloodthirsterShield || 0) + shieldGranted;
+        }
+        message += ` 吸血恢复 ${healed}${shieldGranted > 0 ? `，饮血剑临时护盾 +${shieldGranted}` : ""}。`;
       }
     }
     if (id === "r" && f.hp === 0 && run.augments.includes("feastHeal"))
@@ -2925,7 +2935,9 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         if (run.gear.includes("lichbane")) h.lichReady = true;
       }
       const blocked = Math.min(h.shield, incoming), taken = incoming - blocked;
-      h.shield -= blocked; h.temporaryShield = Math.max(0, (h.temporaryShield || 0) - blocked); h.hp = Math.max(0, h.hp - taken); f.bonus = 0;
+      h.shield -= blocked;
+      h.bloodthirsterShield = Math.max(0, (h.bloodthirsterShield || 0) - Math.min(blocked, h.bloodthirsterShield || 0));
+      h.temporaryShield = Math.max(0, (h.temporaryShield || 0) - blocked); h.hp = Math.max(0, h.hp - taken); f.bonus = 0;
       if (champion.id === "tahmkench") h.grayDamage += taken;
       message = bansheeTriggered
         ? `${base.name}的「${intent.name}」被打断，改用普攻；女妖面纱抵消伤害。`
@@ -2962,6 +2974,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       const blocked = Math.min(h.shield, incoming),
         taken = incoming - blocked;
       h.shield -= blocked;
+      h.bloodthirsterShield = Math.max(0, (h.bloodthirsterShield || 0) - Math.min(blocked, h.bloodthirsterShield || 0));
       h.temporaryShield = Math.max(0, (h.temporaryShield || 0) - blocked);
       h.hp = Math.max(0, h.hp - taken);
       f.bonus = 0;
@@ -2993,6 +3006,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     if (expiredTemporaryShield > 0) {
       h.shield -= expiredTemporaryShield;
       message += ` 临时护盾剩余 ${expiredTemporaryShield} 点消失。`;
+    }
+    if (h.bloodthirsterShield > 0) {
+      h.shield -= h.bloodthirsterShield;
+      message += ` 饮血剑临时护盾 ${h.bloodthirsterShield} 点消失。`;
+      h.bloodthirsterShield = 0;
     }
     if (h.shieldBashTemporary) {
       h.shieldBash = 0;
@@ -3206,6 +3224,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               </span>
             )}
             {champion.id === "aphelios" && apheliosActiveMarks.length > 0 && <span>印记：{apheliosActiveMarks.map((weapon) => `${APHELIOS_WEAPONS[weapon].name}×${foe.apheliosMarks[weapon]}`).join(" · ")}</span>}
+            {hero.bloodthirsterShield > 0 && <span className="ready-status">饮血剑临时护盾 {hero.bloodthirsterShield} · 敌方行动后消失</span>}
             {hero.temporaryShield > 0 && <span>◫ 临时护盾 {hero.temporaryShield} · 敌方行动后消失</span>}
             {hero.crit > 0 && <span>✹ 暴击 {hero.crit}% · 蓄积 {hero.critMeter}/100</span>}
             {hero.armorPen > 0 && <span>➶ 穿甲 {hero.armorPen}</span>}
