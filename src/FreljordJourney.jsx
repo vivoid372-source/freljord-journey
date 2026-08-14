@@ -95,10 +95,10 @@ const tahmShieldAmount = (hero, shieldItems, hasMoonstone, hasDawncore) => {
 
 const rivenShieldAmount = (hero, level, shieldItems, hasMoonstone, hasDawncore, hasValorMastery) =>
   Math.round(
-    (4 + hero.ad * 0.55 + level) *
-      (hasMoonstone ? 1.25 : 1) *
-      (hasDawncore ? 1 + shieldItems * 0.06 : 1) *
-      (hasValorMastery ? 1.2 : 1),
+    (2 + hero.ad * 0.3 + level * 0.5) *
+      (hasMoonstone ? 1.1 : 1) *
+      (hasDawncore ? 1 + Math.min(shieldItems, 2) * 0.03 : 1) *
+      (hasValorMastery ? 1.1 : 1),
   );
 
 const championRoster = {
@@ -378,7 +378,7 @@ const championRoster = {
       attack: {
         ...skills.attack,
         name: "符文之刃",
-        text: "造成AD伤害；消耗1层符文充能时附加2+AD×0.45基础伤害。",
+        text: "造成AD伤害；消耗1层符文充能时附加1+AD×0.25基础伤害。",
       },
       q: {
         id: "q",
@@ -694,16 +694,20 @@ const equipment = {
   youmuu: { id: "youmuu", name: "幽梦之灵", price: 27, image: "/game-icons/youmuu.png", ad: 5, armorPen: 5, tags: ["穿甲", "爆发"], routes: ["jinx_poke", "riven_lethality"], text: "每回合第一张造成伤害的 W 或 R，基础伤害增加 8 点。" },
   serylda: { id: "serylda", name: "赛瑞尔达的怨恨", price: 31, image: "/game-icons/serylda.png", ad: 4, armorPen: 7, tags: ["穿甲", "控制"], routes: ["jinx_poke"], text: "W 能打断危险行动；所有伤害最多额外穿透 7 点护盾。" },
   axiom: { id: "axiom", name: "公理圆弧", price: 32, image: "/game-icons/axiom.png", ad: 5, armorPen: 4, tags: ["穿甲", "终结", "能量"], routes: ["jinx_poke", "darius_infinite_r", "riven_combo", "riven_lethality"], text: "每次打出 R 后恢复 1 能量；每场首次触发回手。锐雯改为首次疾风斩后让放逐之锋回手。" },
-  fimbulwinter: { id: "fimbulwinter", name: "末日寒冬", price: 28, image: "/game-icons/fimbulwinter.png", hp: 18, tags: ["护盾", "控制"], routes: ["tahm_shield"], text: "技能成功打断敌人时，获得最大生命 7% 的护盾。" },
+  fimbulwinter: { id: "fimbulwinter", name: "末日寒冬", price: 28, image: "/game-icons/fimbulwinter.png", hp: 18, tags: ["护盾", "控制"], routes: ["tahm_shield"], text: "技能成功打断敌人时获得护盾；锐雯为最大生命4%，其他英雄为7%。" },
   despair: { id: "despair", name: "无终恨意", price: 30, image: "/game-icons/despair.png", hp: 20, tags: ["护盾", "恢复", "生命"], routes: ["tahm_tank", "tahm_shield"], text: "护盾被消耗后，对敌人造成消耗量 35% 的伤害并恢复等量生命。" },
-  moonstone: { id: "moonstone", name: "月石再生器", price: 26, image: "/game-icons/moonstone.png", ap: 4, hp: 10, tags: ["护盾", "恢复"], routes: ["tahm_shield"], text: "E生成的护盾提高 25%，并恢复该护盾数值 15% 的生命。" },
-  dawncore: { id: "dawncore", name: "黎明核心", price: 34, image: "/game-icons/dawncore.png", ap: 6, tags: ["护盾", "法强"], routes: ["tahm_shield", "tahm_ap"], text: "每持有一件护盾装备，E生成的护盾与总AP提高 6%。" },
+  moonstone: { id: "moonstone", name: "月石再生器", price: 26, image: "/game-icons/moonstone.png", ap: 4, hp: 10, tags: ["护盾", "恢复"], routes: ["tahm_shield"], text: "塔姆E护盾提高25%并恢复护盾15%生命；锐雯E恢复护盾8%生命。" },
+  dawncore: { id: "dawncore", name: "黎明核心", price: 34, image: "/game-icons/dawncore.png", ap: 6, tags: ["护盾", "法强"], routes: ["tahm_shield", "tahm_ap"], text: "其他英雄每件护盾装备使E护盾与总AP提高6%；锐雯每件提高3%，最多计算2件。" },
   trinity: { id: "trinity", name: "三相之力", price: 31, image: "/game-icons/trinity.png", ad: 4, hp: 10, tags: ["战士", "连招", "普攻"], text: "每回合第一次打出技能后，为下一张 A 充能；该 A 的基础伤害增加 6 + AD×0.7。" },
-  guinsoo: { id: "guinsoo", name: "鬼索的狂暴之刃", price: 29, image: "/game-icons/guinsoo.svg", ad: 3, ap: 3, tags: ["普攻", "连击"], text: "每第 3 张 A 的基础伤害增加 8 + AD×0.5，普攻计数跨回合保留。" },
-  cosmic: { id: "cosmic", name: "宇宙驱动", price: 28, image: "/game-icons/cosmic.svg", ap: 6, hp: 8, tags: ["法强", "抽牌", "技能"], text: "每回合打出的第 2 张技能牌额外抽 1 张牌；每回合触发一次。" },
-  horizon: { id: "horizon", name: "视界专注", price: 30, image: "/game-icons/horizon.svg", ap: 7, tags: ["法强", "预判", "技能"], text: "敌人显示危险或蓄力意图时，Q 与 W 的总伤害提高 25%。" },
-  hexplate: { id: "hexplate", name: "实验性海克斯板甲", price: 32, image: "/game-icons/hexplate.svg", ad: 4, hp: 10, tags: ["终极技能", "能量", "抽牌"], routes: ["darius_fighter", "darius_infinite_r", "jinx_poke", "tf_burst"], text: "每次打出 R 后恢复 1 能量；每场战斗首次触发时额外抽 1 张牌。" },
-  frozenheart: { id: "frozenheart", name: "冰霜之心", price: 27, image: "/game-icons/frozenheart.svg", hp: 16, tags: ["生命", "护盾", "技能"], text: "每回合第一次打出 E，恢复 1 能量并获得最大生命 6% 的护盾。" },
+  guinsoo: { id: "guinsoo", name: "鬼索的狂暴之刃", price: 29, image: "/game-icons/guinsoo.png", ad: 3, ap: 3, tags: ["普攻", "连击"], text: "每第 3 张 A 的基础伤害增加 8 + AD×0.5，普攻计数跨回合保留。" },
+  cosmic: { id: "cosmic", name: "宇宙驱动", price: 28, image: "/game-icons/cosmic.png", ap: 6, hp: 8, tags: ["法强", "抽牌", "技能"], text: "每回合打出的第 2 张技能牌额外抽 1 张牌；每回合触发一次。" },
+  horizon: { id: "horizon", name: "视界专注", price: 30, image: "/game-icons/horizon.png", ap: 7, tags: ["法强", "预判", "技能"], text: "敌人显示危险或蓄力意图时，Q 与 W 的总伤害提高 25%。" },
+  hexplate: { id: "hexplate", name: "实验性海克斯板甲", price: 32, image: "/game-icons/hexplate.png", ad: 4, hp: 10, tags: ["终极技能", "能量", "抽牌"], routes: ["darius_fighter", "darius_infinite_r", "jinx_poke", "tf_burst"], text: "每次打出 R 后恢复 1 能量；每场战斗首次触发时额外抽 1 张牌。" },
+  frozenheart: { id: "frozenheart", name: "冰霜之心", price: 27, image: "/game-icons/frozenheart.png", hp: 16, tags: ["生命", "护盾", "技能"], text: "每回合第一次打出 E，恢复 1 能量并获得最大生命 6% 的护盾。" },
+  stridebreaker: { id: "stridebreaker", name: "挺进破坏者", price: 29, image: "/game-icons/stridebreaker.png", ad: 4, hp: 8, tags: ["战士", "普攻"], routes: ["riven_combo"], text: "提供 4 点 AD 与 8 点最大生命；没有额外触发效果。" },
+  sunderedsky: { id: "sunderedsky", name: "焚天", price: 30, image: "/game-icons/sunderedsky.png", ad: 5, hp: 12, tags: ["战士", "生命"], text: "提供 5 点 AD 与 12 点最大生命；没有额外触发效果。" },
+  opportunity: { id: "opportunity", name: "机遇", price: 28, image: "/game-icons/opportunity.png", ad: 5, armorPen: 6, tags: ["穿甲", "爆发"], routes: ["riven_lethality", "aphelios_whitegreen"], text: "提供 5 点 AD 与 6 点穿甲；没有额外触发效果。" },
+  guardianangel: { id: "guardianangel", name: "守护天使", price: 34, image: "/game-icons/guardianangel.png", ad: 5, armorPen: 2, tags: ["战士", "终结"], text: "提供 5 点 AD 与 2 点穿甲；没有额外触发效果。" },
 };
 
 const equipmentStats = (item) => [
@@ -1139,7 +1143,7 @@ const augments = [
   { id: "thickSkin", name: "无底胃囊", rarity: "棱彩", icon: "⬢", champions: ["tahmkench"], text: "每次吞噬斩杀额外永久增加4%最大生命。" },
   { id: "abyssMagic", name: "深渊魔力", rarity: "黄金", icon: "◈", champions: ["tahmkench"], text: "每20点最大生命提供1AP；Q与W对满层品味目标+25%伤害。" },
   { id: "shieldBash", name: "盾击", rarity: "黄金", icon: "⬡", champions: ["tahmkench"], text: "E生成护盾时，本回合下一张A附加该护盾值30%的伤害；末日寒冬触发时强化可保留。" },
-  { id: "valorMastery", name: "勇气剑舞", rarity: "黄金", icon: "⬡", champions: ["riven"], text: "E生成的临时护盾提高20%；本回合下一张A额外造成该次护盾值20%的伤害。" },
+  { id: "valorMastery", name: "勇气剑舞", rarity: "黄金", icon: "⬡", champions: ["riven"], text: "E生成的临时护盾提高10%；本回合下一张A额外造成该次护盾值10%的伤害。" },
   { id: "lightspeedCombo", name: "光速QA", rarity: "棱彩", icon: "⇈", champions: ["riven"], text: "每回合Q3命中时，若此前至少两张A消耗过符文充能，则恢复1能量并抽1张；每回合一次。" },
   { id: "windBlade", name: "断罪之风", rarity: "黄金", icon: "➶", champions: ["riven"], text: "疾风斩额外穿透8点护盾；敌人生命低于40%时，疾风斩总伤害提高30%。" },
 ];
@@ -1760,11 +1764,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     if (hero.armorPen && damage > 0) damage += Math.min(hero.armorPen, foe.shield);
 
     if (isBasicAttack) {
-      if (run.gear.includes("titanic")) damage += Math.round(hero.maxHp * 0.04);
+      if (run.gear.includes("titanic")) damage += Math.round(hero.maxHp * (champion.id === "riven" ? 0.02 : 0.04));
       if (run.gear.includes("nashor")) damage += Math.round(2 + hero.ap * 0.4);
       if (hero.lichReady) damage += Math.round(5 + hero.ap);
-      if (hero.icebornReady) damage += Math.round(hero.maxHp * 0.07);
-      if (heartsteelReady) damage += Math.round(hero.maxHp * 0.08);
+      if (hero.icebornReady) damage += Math.round(hero.maxHp * (champion.id === "riven" ? 0.04 : 0.07));
+      if (heartsteelReady) damage += Math.round(hero.maxHp * (champion.id === "riven" ? 0.05 : 0.08));
       if (run.gear.includes("kraken") && (hero.attacks + 1) % 3 === 0)
         damage += Math.round(14 + hero.ad * 0.8);
       if (id === "attack" && run.gear.includes("guinsoo") && (hero.basicCards + 1) % 3 === 0)
@@ -1910,7 +1914,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     }
     if (champion.id === "riven") {
       if (id === "attack") {
-        const runeBonus = hero.runeCharge > 0 ? Math.round(2 + hero.ad * 0.45) : 0;
+        const runeBonus = hero.runeCharge > 0 ? Math.round(1 + hero.ad * 0.25) : 0;
         return `造成 ${previewDamage(id, hero.ad + level * 2 + runeBonus)} 点伤害${runeBonus ? `，消耗1层符文充能（符文之刃基础伤害+${runeBonus}）` : "；当前没有符文充能"}。`;
       }
       if (id === "q") {
@@ -1931,8 +1935,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (id === "e") {
         const shieldItems = run.gear.filter((gearId) => equipment[gearId].tags.includes("护盾")).length;
         const shield = rivenShieldAmount(hero, level, shieldItems, run.gear.includes("moonstone"), run.gear.includes("dawncore"), run.augments.includes("valorMastery"));
-        const healing = run.gear.includes("moonstone") ? Math.min(hero.maxHp - hero.hp, Math.round(shield * 0.15)) : 0;
-        const valorDamage = run.augments.includes("valorMastery") ? Math.round(shield * 0.2) : 0;
+        const healing = run.gear.includes("moonstone") ? Math.min(hero.maxHp - hero.hp, Math.round(shield * 0.08)) : 0;
+        const valorDamage = run.augments.includes("valorMastery") ? Math.round(shield * 0.1) : 0;
         return `将现有E临时护盾刷新为 ${shield} 点${healing ? `并恢复 ${healing} 生命` : ""}，下一张Q少消耗1能量；获得1层符文充能${valorDamage ? `，下一张A额外造成${valorDamage}点伤害` : ""}。敌方行动后剩余护盾消失。`;
       }
       if (!hero.windSlashReady) {
@@ -2242,9 +2246,9 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     }
     if (champion.id === "riven") {
       if (id === "attack") {
-        damage = h.ad + level * 2;
+        damage = Math.round(h.ad * 0.8 + level * 1.5);
         if (h.runeCharge > 0) {
-          const bonus = Math.round(2 + h.ad * 0.45);
+          const bonus = Math.round(1 + h.ad * 0.25);
           damage += bonus;
           h.runeCharge -= 1;
           h.rivenEmpoweredAttacksTurn += 1;
@@ -2296,10 +2300,10 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         h.temporaryShield = shield;
         h.valorDiscount = true;
         h.runeCharge = Math.min(3, h.runeCharge + 1);
-        const moonstoneHealing = run.gear.includes("moonstone") ? Math.min(h.maxHp - h.hp, Math.round(shield * 0.15)) : 0;
+        const moonstoneHealing = run.gear.includes("moonstone") ? Math.min(h.maxHp - h.hp, Math.round(shield * 0.08)) : 0;
         h.hp += moonstoneHealing;
-        if (run.augments.includes("valorMastery")) h.valorStrike = Math.round(shield * 0.2);
-        message = `勇往直前刷新 ${shield} 点临时护盾${moonstoneHealing ? `并恢复 ${moonstoneHealing} 生命` : ""}；下一张Q或W消耗-1，符文充能 ${h.runeCharge}/3。`;
+        if (run.augments.includes("valorMastery")) h.valorStrike = Math.round(shield * 0.1);
+        message = `勇往直前刷新 ${shield} 点临时护盾${moonstoneHealing ? `并恢复 ${moonstoneHealing} 生命` : ""}；下一张Q消耗-1，符文充能 ${h.runeCharge}/3。`;
       }
       if (id === "r") {
         h.runeCharge = Math.min(3, h.runeCharge + 1);
@@ -2363,14 +2367,14 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     if (h.armorPen && damage > 0) damage += Math.min(h.armorPen, f.shield);
 
     if (champion.id !== "cho" && isBasicAttack) {
-      if (run.gear.includes("titanic")) damage += Math.round(h.maxHp * 0.04);
+      if (run.gear.includes("titanic")) damage += Math.round(h.maxHp * (champion.id === "riven" ? 0.02 : 0.04));
       if (run.gear.includes("nashor")) damage += Math.round(2 + h.ap * 0.4);
       if (h.lichReady) {
         damage += Math.round(5 + h.ap);
         h.lichReady = false;
       }
       if (h.icebornReady) {
-        damage += Math.round(h.maxHp * 0.07);
+        damage += Math.round(h.maxHp * (champion.id === "riven" ? 0.04 : 0.07));
         h.icebornReady = false;
       }
       if (id === "attack" && h.trinityReady) {
@@ -2381,7 +2385,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       }
       if (heartsteelReady) {
         const growth = Math.max(1, Math.round(h.maxHp * 0.02));
-        damage += Math.round(h.maxHp * 0.08);
+        damage += Math.round(h.maxHp * (champion.id === "riven" ? 0.05 : 0.08));
         h.maxHp += growth;
         h.hp += growth;
         h.heartsteelUsed = true;
@@ -2474,7 +2478,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     if ((newlyInterrupted || newlyStunned) && run.gear.includes("iceborn"))
       h.icebornReady = true;
     if (newlyInterrupted && run.gear.includes("fimbulwinter")) {
-      const shield = Math.round(h.maxHp * 0.07);
+      const shield = Math.round(h.maxHp * (champion.id === "riven" ? 0.04 : 0.07));
       h.shield += shield;
       if (run.augments.includes("shieldBash")) {
         h.shieldBash = Math.round(shield * 0.3);
@@ -3451,6 +3455,7 @@ function GameRun({ championId, onQuit }) {
     const builds = championBuilds[run.championId];
     const relevantIds = [...new Set(builds.flatMap((build) => build.items))];
     const allCandidates = relevantIds.filter((id) => !run.gear.includes(id));
+    const irrelevantPool = Object.keys(equipment).filter((id) => !run.gear.includes(id) && !relevantIds.includes(id));
     const previous = run.lastShopStock || [];
     const candidates = allCandidates.filter((id) => !previous.includes(id));
     const pool = candidates.length >= 3 ? candidates : allCandidates;
@@ -3462,7 +3467,6 @@ function GameRun({ championId, onQuit }) {
     const shuffled = (ids, salt) => [...ids].sort((a, b) => hash(a, salt) - hash(b, salt));
     const corePool = committed.items.filter((id) => pool.includes(id));
     const synergyPool = pool.filter((id) => rankedBuilds.some((build) => build.items.includes(id) && build.items.some((owned) => run.gear.includes(owned))));
-    const pivotPool = pool.filter((id) => !committed.items.includes(id));
     const choices = [];
     const take = (ids, salt) => {
       const id = shuffled(ids.filter((candidate) => !choices.includes(candidate)), salt)[0];
@@ -3470,8 +3474,8 @@ function GameRun({ championId, onQuit }) {
     };
     take(corePool, 11);
     take(synergyPool, 23);
-    take(pivotPool, 37);
-    shuffled(pool, 53).forEach((id) => { if (choices.length < 3 && !choices.includes(id)) choices.push(id); });
+    take(irrelevantPool, 37);
+    shuffled([...pool, ...irrelevantPool], 53).forEach((id) => { if (choices.length < 3 && !choices.includes(id)) choices.push(id); });
     return choices.slice(0, 3);
   }, [run.gear, run.node, run.championId, run.gold, run.shopRoll, run.lastShopStock, run.rewardSeed]);
 
