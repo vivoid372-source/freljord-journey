@@ -1805,6 +1805,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
   const titanicBonus = (state = hero) => run.gear.includes("titanic")
     ? Math.round(state.maxHp * (champion.id === "riven" ? 0.02 : 0.04))
     : 0;
+  const titanicAppliedBonus = (state = hero) => Math.round(titanicBonus(state) * HERO_DAMAGE_SCALE);
 
   const previewDamage = (id, startingDamage, options = {}) => {
     const isBasicAttack = options.isBasicAttack ?? id === "attack";
@@ -2514,7 +2515,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       const titanic = titanicBonus(h);
       if (titanic) {
         damage += titanic;
-        message += ` 巨型九头蛇 +${titanic}。`;
+        message += ` 巨型九头蛇结算 +${Math.round(titanic * HERO_DAMAGE_SCALE)}。`;
       }
       if (run.gear.includes("nashor")) damage += Math.round(2 + h.ap * 0.4);
       if (h.lichReady) {
@@ -2559,7 +2560,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       const titanic = titanicBonus(h);
       if (titanic) {
         damage += titanic;
-        message += ` 巨型九头蛇 +${titanic}。`;
+        message += ` 巨型九头蛇结算 +${Math.round(titanic * HERO_DAMAGE_SCALE)}。`;
       }
       if (run.gear.includes("nashor")) damage += Math.round(2 + h.ap * 0.4);
       if (h.lichReady) {
@@ -3282,7 +3283,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               <SkillCard
                 key={`${id}-${i}`}
                 skill={displayedSkill(id, i)}
-                text={`${skillPreview(id, i)}${run.gear.includes("titanic") && (id === "attack" || (champion.id === "darius" && id === "w")) ? `；巨型九头蛇额外 ${titanicBonus(hero)} 点伤害` : ""}`}
+                text={`${skillPreview(id, i)}${run.gear.includes("titanic") && (id === "attack" || (champion.id === "darius" && id === "w")) ? `；巨型九头蛇结算额外 ${titanicAppliedBonus(hero)} 点伤害` : ""}`}
               level={run.upgrades[id]}
               cost={cardCost(id)}
               status={champion.id === "aphelios" && hero.aphChakrams > 0 && (id === "attack" || id === "q") ? `折镜飞轮 ×${hero.aphChakrams}` : null}
