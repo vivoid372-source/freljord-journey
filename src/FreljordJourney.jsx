@@ -72,6 +72,40 @@ const baseStarterDeck = [
 // 普攻与技能接近 1:1；每场战斗和弃牌回洗时都会重新洗牌。
 const starterDeck = [...baseStarterDeck];
 
+// Each champion starts from the same card skeleton, with only the mechanics
+// that need a different card identity changing it. Duplicate cards are intentional:
+// Aphelios has two Q cards (his former E slot becomes Q), and Riven has two Q
+// cards so a Q-heavy opening is possible. Neither deck limits a hand to one Q.
+const championDeckFor = (championId) => {
+  if (championId === "aphelios") return starterDeck.map((id) => (id === "e" ? "q" : id));
+  if (championId === "riven") return [...starterDeck, "q"];
+  if (championId === "jinx") {
+    let qKept = false;
+    return starterDeck.map((id) => {
+      if (id !== "q") return id;
+      if (qKept) return "attack";
+      qKept = true;
+      return id;
+    });
+  }
+  return [...starterDeck];
+};
+
+const expectedDeckCounts = {
+  standard: { attack: 8, q: 1, w: 1, e: 1, r: 1 },
+  aphelios: { attack: 8, q: 2, w: 1, r: 1 },
+  jinx: { attack: 8, q: 1, w: 1, e: 1, r: 1 },
+  riven: { attack: 8, q: 2, w: 1, e: 1, r: 1 },
+};
+
+const deckCounts = (deck) => deck.reduce((counts, id) => ({ ...counts, [id]: (counts[id] || 0) + 1 }), {});
+const deckProfileFor = (championId) => expectedDeckCounts[championId] || expectedDeckCounts.standard;
+const deckMatchesProfile = (deck, profile) => {
+  const counts = deckCounts(deck);
+  return Object.keys(profile).every((id) => (counts[id] || 0) === profile[id])
+    && Object.keys(counts).every((id) => profile[id] === counts[id]);
+};
+
 // 玩家所有直接伤害与卡牌预览共用该倍率，确保显示数值与实际结算一致。
 const HERO_DAMAGE_SCALE = 0.35;
 const BATTLE_VICTORY_TRANSITION_MS = 1000;
@@ -1172,19 +1206,10 @@ const seededRewardScore = (id, seed) => {
 
 const defaultRun = (championId = "cho") => {
   const champion = championRoster[championId];
-  let jinxQKept = false;
-  const championDeck = championId === "aphelios"
-    ? starterDeck.map((id) => (id === "e" ? "q" : id))
-    : championId === "jinx"
-    ? starterDeck.map((id) => {
-        if (id !== "q") return id;
-        if (!jinxQKept) {
-          jinxQKept = true;
-          return id;
-        }
-        return "attack";
-      })
-    : starterDeck;
+  const championDeck = championDeckFor(championId);
+  if (!deckMatchesProfile(championDeck, deckProfileFor(championId))) {
+    throw new Error(`Invalid starter deck for ${championId}`);
+  }
   return {
     championId,
     hero: {
@@ -1571,6 +1596,25 @@ function shuffleDeck(cards) {
   return shuffled;
 }
 
+const openingHandSignature = (cards, count) => cards
+  .slice(0, count)
+  .sort()
+  .join("|");
+
+function shuffleBattleDeck(cards, previousOpeningSignature, openingHandSize) {
+  let shuffled = shuffleDeck(cards);
+  // A repeated opening composition is technically random, but feels like the
+  // deck is stuck. Retry a bounded number of times while preserving duplicate
+  // cards such as Riven/Aphelios Qs (the signature is a multiset, not a Set).
+  if (previousOpeningSignature) {
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      if (openingHandSignature(shuffled, openingHandSize) !== previousOpeningSignature) break;
+      shuffled = shuffleDeck(cards);
+    }
+  }
+  return shuffled;
+}
+
 function draw(pile, discard, count) {
   let p = [...pile],
     d = [...discard];
@@ -1622,7 +1666,12 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     gold: Math.round(template.gold * (1 + (chapter - 1) * 0.38)),
     actions: template.actions.map(scaleAction),
   };
-  const deck = useMemo(() => shuffleDeck(run.deck), [run.deck]);
+  const openingHandSize = Math.min(8, 5 + (run.hero.openingDraw || 0) + (run.augments.includes("tacticalHand") ? 1 : 0));
+  const deck = useMemo(
+    () => shuffleBattleDeck(run.deck, run.lastOpeningSignature, openingHandSize),
+    [run.deck, run.lastOpeningSignature, openingHandSize],
+  );
+  const openingSignature = openingHandSignature(deck, openingHandSize);
   const bonusLife = run.hero.maxHp - champion.hp;
   let combatAp =
     run.hero.ap +
@@ -1725,7 +1774,6 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     frostPower: 0,
     blind: 0,
   });
-  const openingHandSize = Math.min(8, 5 + (run.hero.openingDraw || 0) + (run.augments.includes("tacticalHand") ? 1 : 0));
   const [hand, setHand] = useState(deck.slice(0, openingHandSize));
   const [pile, setPile] = useState(deck.slice(openingHandSize));
   const [discard, setDiscard] = useState([]);
@@ -2807,6 +2855,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               } : {}),
             },
             base,
+            openingSignature,
           ),
         BATTLE_VICTORY_TRANSITION_MS,
       );
@@ -3036,6 +3085,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               } : {}),
             },
             base,
+            openingSignature,
           ),
         BATTLE_VICTORY_TRANSITION_MS,
       );
@@ -3624,12 +3674,13 @@ function GameRun({ championId, onQuit }) {
       setScreen("battle");
     } else setScreen("rest");
   }, []);
-  const winBattle = (hero, enemy) => {
+  const winBattle = (hero, enemy, openingSignature) => {
     const node = route[run.node];
     const grownHero = applyVictoryGrowth(hero, run.championId);
     if (node.summitBoss) {
       setRun((r) => ({
         ...r,
+        lastOpeningSignature: openingSignature,
         hero: { ...grownHero, hp: grownHero.maxHp },
         gold: r.gold + enemy.gold + (hero.battleBonusGold || 0),
         node: r.node + 1,
@@ -3638,7 +3689,12 @@ function GameRun({ championId, onQuit }) {
       return;
     }
     if (node.finalBoss) {
-      setRun((r) => ({ ...r, hero: { ...grownHero, hp: grownHero.maxHp }, gold: r.gold + enemy.gold + (hero.battleBonusGold || 0) }));
+      setRun((r) => ({
+        ...r,
+        lastOpeningSignature: openingSignature,
+        hero: { ...grownHero, hp: grownHero.maxHp },
+        gold: r.gold + enemy.gold + (hero.battleBonusGold || 0),
+      }));
       setScreen("victory");
       return;
     }
@@ -3646,7 +3702,12 @@ function GameRun({ championId, onQuit }) {
       const amp = r.gear.includes("visage") ? 1.5 : 1;
       const recoveryRatio = 0.1 + (r.hero.victoryRecoveryBonus || 0) + (r.gear.includes("warmog") ? 0.18 : 0);
       const recoveredHero = { ...grownHero, hp: Math.min(grownHero.maxHp, grownHero.hp + Math.round(grownHero.maxHp * recoveryRatio * amp)) };
-      return { ...r, hero: recoveredHero, gold: r.gold + enemy.gold + (hero.battleBonusGold || 0) };
+      return {
+        ...r,
+        lastOpeningSignature: openingSignature,
+        hero: recoveredHero,
+        gold: r.gold + enemy.gold + (hero.battleBonusGold || 0),
+      };
     });
     setPostBattle({ augment: !!node.augment, finalBoss: !!enemy.finalBoss });
     setBought(false);
