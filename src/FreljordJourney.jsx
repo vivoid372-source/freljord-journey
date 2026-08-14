@@ -81,7 +81,7 @@ const championDeckFor = (championId) => {
   if (championId === "riven") return [...starterDeck, "q"];
   if (championId === "twistedfate") return [
     "attack", "attack", "attack", "attack", "attack",
-    "q", "q", "w", "w", "e", "e", "r",
+    "q", "q", "w", "e", "e", "r",
   ];
   if (championId === "jinx") {
     let qKept = false;
@@ -100,7 +100,7 @@ const expectedDeckCounts = {
   aphelios: { attack: 8, q: 2, w: 1, r: 1 },
   jinx: { attack: 8, q: 1, w: 1, e: 1, r: 1 },
   riven: { attack: 8, q: 2, w: 1, e: 1, r: 1 },
-  twistedfate: { attack: 5, q: 2, w: 2, e: 2, r: 1 },
+  twistedfate: { attack: 5, q: 2, w: 1, e: 2, r: 1 },
 };
 
 const deckCounts = (deck) => deck.reduce((counts, id) => ({ ...counts, [id]: (counts[id] || 0) + 1 }), {});
@@ -585,7 +585,7 @@ const championBuilds = {
 const championGuides = {
   cho: { loop: "用Q眩晕跳过敌方回合，W打断危险行动，E强化普攻压低血线，最后用R盛宴斩杀成长。", control: "Q是眩晕：敌人无法行动；W是打断：敌人仍会改用普攻。", warning: "盛宴必须进入卡牌显示的斩杀线；每次斩杀英雄单位永久增加5点最大生命且无上限，并强化心之钢、九头蛇与裂隙制造者。" },
   darius: { loop: "用普攻和W快速叠流血，Q维持续航，满层后以R打出最高爆发。", control: "E只打断特殊行动，敌人随后改用普攻；它不会让敌人跳过回合。", warning: "集齐朔极之矛、实验性海克斯板甲和公理圆弧后，满层流血可让R回手并返还2能量，形成无限断头台。" },
-  twistedfate: { loop: "打出W后三选一：蓝牌回能、红牌增伤、金牌控制；所选牌由下一张A触发。R标记后接Q爆发。", control: "金牌可直接选择并眩晕所有敌人，包括精英与BOSS。", warning: "牌库降低普攻密度、增加Q/W/E；朔极之矛每次技能抽牌，宇宙驱动补充技能抽牌，允许金牌定住→E刷钱→蓝牌回能→E刷钱的经济循环。" },
+  twistedfate: { loop: "打出W后三选一：蓝牌回能、红牌增伤、金牌控制；所选牌由下一张A触发。R标记后接Q爆发。", control: "金牌可直接选择并眩晕所有敌人，包括精英与BOSS。", warning: "牌库降低普攻密度、仅保留1张W并增加Q/E；朔极之矛每次技能抽牌，宇宙驱动补充技能抽牌，允许金牌定住→E刷钱→蓝牌回能→E刷钱的经济循环。" },
   jinx: { loop: "机枪连续普攻叠至3层后开始抽牌循环；需要爆发时用Q切换火箭，W与R负责远程收割。", control: "E嚼火者是眩晕：敌人本回合完全无法行动；赛瑞尔达强化的W只是打断。", warning: "金克斯牌组只保留1张切枪Q，其余替换为A普攻；机枪抽牌每回合有上限，破败与饮血剑提供续航。" },
   tahmkench: { loop: "普攻叠1层、W叠2层品味；满层后在Q控制与R强化吞噬之间取舍，E在敌方行动前刷新临时护盾。", control: "满3层Q消耗品味并直接眩晕敌人。W只在危险行动时打断。", warning: "E护盾不能跨敌方行动保留或重复叠加；满层R伤害提高50%并提高斩杀线。" },
   riven: { loop: "技能获得符文充能，A消耗充能追加伤害；Q前两段回手，第三段打断。E减免下一张Q，三段Q与穿插A总计恰好消耗3能量。", control: "Q3稳定打断特殊行动，敌人仍会改用普攻；W积攒2层符文充能后直接眩晕敌人。", warning: "R第一段提高20%AD并变为疾风斩；两回合内不打出疾风斩，强化与二段R都会消失。" },
@@ -1628,14 +1628,32 @@ function shuffleBattleDeck(cards, previousOpeningSignature, openingHandSize) {
   return shuffled;
 }
 
-function draw(pile, discard, count) {
+function weightedRandomCard(cards) {
+  if (!cards.length) return null;
+  let cursor = Math.floor(Math.random() * cards.length);
+  for (const card of cards) {
+    if (cursor === 0) return card;
+    cursor -= 1;
+  }
+  return cards[cards.length - 1];
+}
+
+function draw(pile, discard, count, fallbackDeck = []) {
   let p = [...pile],
     d = [...discard];
   if (p.length < count) {
-    p = shuffleDeck([...p, ...d]);
-    d = [];
+    if (p.length + d.length > 0) {
+      p = shuffleDeck([...p, ...d]);
+      d = [];
+    }
   }
-  return { cards: p.slice(0, count), pile: p.slice(count), discard: d };
+  const cards = p.slice(0, count);
+  p = p.slice(count);
+  const generated = Math.max(0, count - cards.length);
+  if (generated > 0 && fallbackDeck.length > 0) {
+    for (let i = 0; i < generated; i += 1) cards.push(weightedRandomCard(fallbackDeck));
+  }
+  return { cards, pile: p, discard: d, generated };
 }
 
 function Battle({ run, enemyId, onWin, onLose, onQuit }) {
@@ -2844,19 +2862,24 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       }
       h.aphGrantQ = false;
     }
+    let drawPile = pile;
     if (h.destinyDraw) {
-      const extra = draw(pile, nextDiscard, Math.min(h.destinyDraw, 8 - nextHand.length));
+      const extra = draw(drawPile, nextDiscard, Math.min(h.destinyDraw, 8 - nextHand.length), run.deck);
       nextHand = [...nextHand, ...extra.cards];
       nextQStages = [...nextQStages, ...extra.cards.map(() => 0)];
       nextDiscard = extra.discard;
-      setPile(extra.pile);
+      drawPile = extra.pile;
+      if (extra.generated > 0) message += ` 牌库耗尽，按当前牌库比例随机补入${extra.generated}张牌。`;
       h.destinyDraw = 0;
     }
     if (h.bonusDraw) {
-      const extra = draw(pile, nextDiscard, Math.min(h.bonusDraw, 8 - nextHand.length));
+      const extra = draw(drawPile, nextDiscard, Math.min(h.bonusDraw, 8 - nextHand.length), run.deck);
       nextHand = [...nextHand, ...extra.cards];
       nextQStages = [...nextQStages, ...extra.cards.map(() => 0)];
-      nextDiscard = extra.discard; setPile(extra.pile); h.bonusDraw = 0;
+      nextDiscard = extra.discard;
+      drawPile = extra.pile;
+      if (extra.generated > 0) message += ` 牌库耗尽，按当前牌库比例随机补入${extra.generated}张牌。`;
+      h.bonusDraw = 0;
     }
     if (h.returnUltimate) {
       if (!nextHand.includes("r") && nextHand.length < 8) {
@@ -2871,6 +2894,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     setFoe(f);
     setHand(nextHand);
     setRivenQStages(nextQStages);
+    setPile(drawPile);
     setDiscard(nextDiscard);
     setLog([message]);
     if (f.hp <= 0) {
@@ -3067,7 +3091,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       message += ` 贾修提供 ${shield} 点护盾。`;
     }
     const drawCount = Math.max(0, Math.min(4, 8 - hand.length));
-    const result = draw(pile, discard, drawCount);
+    const result = draw(pile, discard, drawCount, run.deck);
     const retainedHand = [...hand, ...result.cards];
     const retainedQStages = [...rivenQStages, ...result.cards.map(() => 0)];
     h.energy = Math.max(1, h.maxEnergy - h.drained);
