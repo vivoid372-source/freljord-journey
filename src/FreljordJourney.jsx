@@ -83,8 +83,11 @@ const APHELIOS_WEAPONS = {
   infernum: { name: "荧焰", qName: "暝涌", color: "#5d9fe8", qImage: "/game-icons/aphelios-q-infernum.png" },
   crescendum: { name: "折镜", qName: "驻灵", color: "#e8edf5", qImage: "/game-icons/aphelios-q-crescendum.png" },
 };
-const APHELIOS_INITIAL_AMMO = Object.fromEntries(APHELIOS_WEAPON_ORDER.map((weapon) => [weapon, 7]));
+const APHELIOS_MAX_AMMO = 10;
+const APHELIOS_MAX_CHAKRAMS = 8;
+const APHELIOS_INITIAL_AMMO = Object.fromEntries(APHELIOS_WEAPON_ORDER.map((weapon) => [weapon, APHELIOS_MAX_AMMO]));
 const apheliosWeaponName = (weapon) => APHELIOS_WEAPONS[weapon]?.name || weapon;
+const apheliosExecuteRatio = (level, hasExecutionAugment) => Math.min(0.18, 0.1 + level * 0.015 + (hasExecutionAugment ? 0.04 : 0));
 
 const tahmExecuteRatio = (level, isBoss, fullTaste) => {
   const baseRatio = isBoss
@@ -443,7 +446,7 @@ const championRoster = {
     ap: 0,
     color: "#8db8d9",
     mechanic: "月相轮转",
-    description: "管理通碧、断魄、坠明、荧焰、折镜的7发弹药；武器队列会跨战斗延续。",
+    description: "管理通碧、断魄、坠明、荧焰、折镜的10发弹药；武器队列会跨战斗延续。",
     builds: ["断魄折镜续航", "折镜通碧飞轮", "坠明荧焰控场"],
     preferredTags: ["普攻", "连招", "持续"],
     skills: {
@@ -460,7 +463,7 @@ const championRoster = {
         typeName: "技能",
         cost: 1,
         icon: "☾",
-        text: "消耗1能量与主武器2发弹药，施放该武器的专属Q；随后可用W切枪衔接副武器Q。",
+        text: "消耗1能量与主武器1发弹药，施放专属Q并施加副武器印记；随后可用W切枪衔接副武器Q。",
       },
       w: {
         id: "w",
@@ -480,7 +483,7 @@ const championRoster = {
         typeName: "终极技能",
         cost: 2,
         icon: "◉",
-        text: "根据当前主武器释放终结技，不触发副武器且不消耗弹药。",
+        text: "消耗主武器1发弹药，根据当前武器释放强化月蚀，造成更高伤害并触发专属强化效果。",
       },
     },
   },
@@ -541,7 +544,7 @@ const championGuides = {
   jinx: { loop: "机枪连续普攻叠至3层后开始抽牌循环；需要爆发时用Q切换火箭，W与R负责远程收割。", control: "E嚼火者是眩晕：敌人本回合完全无法行动；赛瑞尔达强化的W只是打断。", warning: "金克斯牌组只保留1张切枪Q，其余替换为A普攻；机枪抽牌每回合有上限，破败与饮血剑提供续航。" },
   tahmkench: { loop: "普攻叠1层、W叠2层品味；满层后在Q控制与R强化吞噬之间取舍，E在敌方行动前刷新临时护盾。", control: "满3层Q消耗品味并施加1点韧性压力；普通敌人立即眩晕，精英与BOSS需要累计2点。W只在危险行动时打断。", warning: "E护盾不能跨敌方行动保留或重复叠加；满层R伤害提高50%并提高斩杀线。" },
   riven: { loop: "技能获得符文充能，A消耗充能追加伤害；Q前两段回手，第三段打断。E减免下一张Q，三段Q与穿插A总计恰好消耗3能量。", control: "Q3稳定打断特殊行动，敌人仍会改用普攻；W需要先积攒2层符文充能才能施加1点韧性压力。", warning: "R第一段提高20%AD并变为疾风斩；两回合内不打出疾风斩，强化与二段R都会消失。" },
-  aphelios: { loop: "A消耗主武器1发弹药，Q消耗1能量与2发弹药；Q后用无消耗W切至副武器，立刻获得副武器Q。", control: "通碧A引爆月闪印记并发射折镜飞轮；坠明A铺印记、暗蚀消耗印记眩晕；荧焰A/Q逐层施加致盲。", warning: "初始顺序为通碧→断魄→坠明→荧焰→折镜；弹药、主副武器和后备队列跨战斗保留，耗尽的武器补满7发后进入队尾。" },
+  aphelios: { loop: "A和R各消耗主武器1发弹药，Q消耗1能量与1发弹药并施加副武器印记；Q后用无消耗W切枪，立刻获得副武器Q。", control: "通碧A引爆月闪印记并发射折镜飞轮；坠明A铺印记、暗蚀消耗印记眩晕；荧焰A/Q逐层施加致盲。", warning: "初始顺序为通碧→断魄→坠明→荧焰→折镜；每把武器10发弹药，状态跨战斗保留，耗尽后补满10发并进入队尾。" },
 };
 
 const equipment = {
@@ -1710,6 +1713,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     bonus: 0,
     interrupted: false,
     stunned: false,
+    apheliosRootTurns: 0,
     stunProgress: 0,
     controlWard: false,
     silenced: false,
@@ -1742,7 +1746,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     if (champion.id === "riven" && id === "r" && state.windSlashReady) cost = 1;
     if (champion.id === "riven" && state.valorDiscount && id === "q")
       cost = Math.max(0, cost - 1);
-    if (champion.id === "aphelios" && id === "q" && (state.aphAmmo?.[state.aphMainWeapon] || 0) < 2)
+    if (champion.id === "aphelios" && (id === "q" || id === "r") && (state.aphAmmo?.[state.aphMainWeapon] || 0) < 1)
       return Number.POSITIVE_INFINITY;
     return cost;
   };
@@ -1913,7 +1917,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         const chakramDamage = main === "calibrum" && marks.calibrum && hero.aphChakrams > 0
           ? hero.aphChakrams * Math.round(4 + hero.ad * 0.25)
           : 0;
-        return `消耗${mainWeapon.name}1发弹药（剩余${Math.max(0, ammo - 1)}），造成 ${previewDamage(id, hero.ad + level * 2 + bonus + chakramDamage)} 点伤害${bonus ? `，引爆通碧印记并发射${hero.aphChakrams}枚飞轮` : ""}${main === "gravitum" ? "，施加1层坠明印记" : main === "infernum" ? "，施加1层致盲（最多3层）" : main === "crescendum" ? `，获得1枚折镜飞轮（${Math.min(6, hero.aphChakrams + 1)}/6）` : ""}。`;
+        return `消耗${mainWeapon.name}1发弹药（剩余${Math.max(0, ammo - 1)}/${APHELIOS_MAX_AMMO}），造成 ${previewDamage(id, hero.ad + level * 2 + bonus + chakramDamage)} 点伤害${bonus ? `，引爆通碧印记并发射${hero.aphChakrams}枚飞轮` : ""}${main === "gravitum" ? "，施加1层坠明印记" : main === "infernum" ? `，施加1层致盲（${foe.apheliosBlind}→${Math.min(5, foe.apheliosBlind + 1)}/5，落空率${Math.min(100, (foe.apheliosBlind + 1) * 20)}%）` : main === "crescendum" ? `，获得1枚折镜飞轮（${Math.min(APHELIOS_MAX_CHAKRAMS, hero.aphChakrams + 1)}/${APHELIOS_MAX_CHAKRAMS}）` : ""}。`;
       }
       if (id === "q") {
         const raw = main === "calibrum"
@@ -1926,12 +1930,27 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
                 ? 7 + hero.ad * 0.6 + level * 2.5
                 : 8 + hero.ad * 0.65 + level * 3 + hero.aphChakrams * (4 + hero.ad * 0.25);
         const severumHealing = Math.min(hero.maxHp - hero.hp, Math.round(hero.maxHp * 0.08));
-        const offText = main === "calibrum" ? `施加通碧与${offWeapon.name}印记` : main === "severum" ? `恢复${severumHealing}生命并施加${offWeapon.name}印记×3` : main === "gravitum" ? (marks.gravitum ? "消耗1层坠明印记并眩晕" : "需要坠明印记才能眩晕") : main === "infernum" ? `施加1层致盲与${offWeapon.name}印记` : `驱动${hero.aphChakrams}枚飞轮并施加${offWeapon.name}印记`;
-        return `${mainWeapon.qName}：消耗1能量与${mainWeapon.name}2发弹药（剩余${Math.max(0, ammo - 2)}），造成 ${previewDamage(id, Math.round(raw))} 点伤害；${offText}。Q后可用W立刻衔接副武器Q。`;
+        const offText = main === "calibrum" ? `施加通碧与${offWeapon.name}印记` : main === "severum" ? `恢复${severumHealing}生命并施加${offWeapon.name}印记×3` : main === "gravitum" ? (marks.gravitum ? "消耗1层坠明印记并眩晕" : "需要坠明印记才能眩晕") : main === "infernum" ? `施加1层致盲（${Math.min(5, foe.apheliosBlind + 1)}/5，落空率${Math.min(100, (foe.apheliosBlind + 1) * 20)}%）与${offWeapon.name}印记` : `驱动${hero.aphChakrams}枚飞轮并施加${offWeapon.name}印记`;
+        return `${mainWeapon.qName}：消耗1能量与${mainWeapon.name}1发弹药（剩余${Math.max(0, ammo - 1)}/${APHELIOS_MAX_AMMO}），造成 ${previewDamage(id, Math.round(raw))} 点伤害；${offText}。Q后可用W立刻衔接副武器Q。`;
       }
       if (id === "w") return `无消耗交换主武器${mainWeapon.name}与副武器${offWeapon.name}${hero.aphQSwapReady ? `，并立即将${offWeapon.qName}加入手牌` : ""}；武器印记保留。`;
-      const raw = main === "calibrum" ? 14 + hero.ad * 0.9 + level * 4 + hero.aphChakrams * (4 + hero.ad * 0.25) : 12 + hero.ad * 0.9 + level * 4;
-      return `月蚀以${mainWeapon.name}终结，造成 ${previewDamage(id, Math.round(raw))} 点伤害；不触发副武器且不消耗弹药。`;
+      const totalMarks = Object.values(marks).reduce((total, count) => total + count, 0);
+      const markBurst = totalMarks * Math.round(4 + hero.ad * 0.2);
+      let raw = 14 + hero.ad + level * 4 + markBurst;
+      let effectText = "";
+      if (main === "calibrum") {
+        raw += 5 + hero.ad * 0.35 + hero.aphChakrams * (4 + hero.ad * 0.25);
+        effectText = `爆破后重新施加2层通碧印记${hero.aphChakrams > 0 ? `，并发射${hero.aphChakrams}枚折镜飞轮` : ""}`;
+      }
+      if (main === "severum") effectText = `大幅吸血，恢复${Math.min(hero.maxHp - hero.hp, Math.round(hero.maxHp * 0.25))}生命`;
+      if (main === "gravitum") effectText = "定身敌人2个敌方回合";
+      if (main === "infernum") effectText = "叠满5层致盲，落空率达到100%";
+      if (main === "crescendum") effectText = `获得4枚折镜飞轮（${hero.aphChakrams}→${Math.min(APHELIOS_MAX_CHAKRAMS, hero.aphChakrams + 4)}/${APHELIOS_MAX_CHAKRAMS}）`;
+      const executeRatio = apheliosExecuteRatio(level, run.augments.includes("execution"));
+      const threshold = Math.round(foe.maxHp * executeRatio);
+      const preview = previewDamage(id, Math.round(raw));
+      const actual = foe.hp / foe.maxHp <= executeRatio ? Math.max(preview, foe.hp + foe.shield) : preview;
+      return `强化月蚀：消耗${mainWeapon.name}1发弹药（剩余${Math.max(0, ammo - 1)}/${APHELIOS_MAX_AMMO}），引爆${totalMarks}层全部印记（爆破基础伤害+${markBurst}），造成 ${actual} 点伤害；${effectText}；生命≤${threshold}（${Math.round(executeRatio * 100)}%）时斩杀。`;
     }
     if (champion.id === "riven") {
       if (id === "attack") {
@@ -2220,11 +2239,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
           } else message += ` 引爆通碧印记（+${bonus}）。`;
         }
         if (main === "gravitum") { addMark("gravitum"); message += " 施加1层坠明印记。"; }
-        if (main === "infernum") { f.apheliosBlind = Math.min(3, (f.apheliosBlind || 0) + 1); message += ` 荧焰施加1层致盲（${f.apheliosBlind}/3）。`; }
-        if (main === "crescendum") { h.aphChakrams = Math.min(6, h.aphChakrams + 1); message += ` 获得1枚折镜飞轮（${h.aphChakrams}/6）。`; }
+        if (main === "infernum") { f.apheliosBlind = Math.min(5, (f.apheliosBlind || 0) + 1); message += ` 荧焰施加1层致盲（${f.apheliosBlind}/5，落空率${f.apheliosBlind * 20}%）。`; }
+        if (main === "crescendum") { h.aphChakrams = Math.min(APHELIOS_MAX_CHAKRAMS, h.aphChakrams + 1); message += ` 获得1枚折镜飞轮（${h.aphChakrams}/${APHELIOS_MAX_CHAKRAMS}）。`; }
       }
       if (id === "q") {
-        consumeAmmo(2);
+        consumeAmmo(1);
         h.aphQSwapReady = true;
         if (main === "calibrum") { damage = Math.round(8 + h.ad * 0.7 + level * 3); addMark("calibrum"); addMark(off); message += ` 月闪施加通碧印记，并施加${offName}印记。`; }
         if (main === "severum") {
@@ -2242,12 +2261,13 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
           } else message += " 当前没有坠明印记，暗蚀无法眩晕。";
           addMark(off);
         }
-        if (main === "infernum") { damage = Math.round(7 + h.ad * 0.6 + level * 2.5); f.apheliosBlind = Math.min(3, (f.apheliosBlind || 0) + 1); addMark(off); message += ` 暝涌施加1层致盲（${f.apheliosBlind}/3），并施加${offName}印记。`; }
+        if (main === "infernum") { damage = Math.round(7 + h.ad * 0.6 + level * 2.5); f.apheliosBlind = Math.min(5, (f.apheliosBlind || 0) + 1); addMark(off); message += ` 暝涌施加1层致盲（${f.apheliosBlind}/5，落空率${f.apheliosBlind * 20}%），并施加${offName}印记。`; }
         if (main === "crescendum") {
           const count = h.aphChakrams;
           damage = Math.round(8 + h.ad * 0.65 + level * 3 + count * (4 + h.ad * 0.25));
-          if (count > 0) { h.aphChakrams = 0; addMark(off, Math.min(3, count)); message += ` 驻灵驱动${count}枚飞轮命中并施加${offName}印记。`; }
-          else message += " 驻灵启动，但当前没有飞轮。";
+          addMark(off, count > 0 ? Math.min(3, count) : 1);
+          if (count > 0) { h.aphChakrams = 0; message += ` 驻灵驱动${count}枚飞轮命中并施加${offName}印记。`; }
+          else message += ` 驻灵启动并施加1层${offName}印记，但当前没有飞轮。`;
         }
       }
       if (id === "w") {
@@ -2257,12 +2277,26 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         message = `武器切换：${apheliosWeaponName(h.aphMainWeapon)}主手，${apheliosWeaponName(h.aphOffWeapon)}副手。${h.aphGrantQ ? `${APHELIOS_WEAPONS[h.aphMainWeapon].qName}立即加入手牌。` : ""}`;
       }
       if (id === "r") {
-        damage = Math.round(12 + h.ad * 0.9 + level * 4);
-        if (main === "calibrum" && h.aphChakrams > 0) { damage += h.aphChakrams * Math.round(4 + h.ad * 0.25); message += ` 月蚀引爆${h.aphChakrams}枚折镜飞轮。`; h.aphChakrams = 0; }
-        message += ` 以${mainName}主手完成终结，不触发副武器。`;
+        consumeAmmo(1);
+        const totalMarks = Object.values(marks).reduce((total, count) => total + count, 0);
+        const markBurst = totalMarks * Math.round(4 + h.ad * 0.2);
+        damage = Math.round(14 + h.ad + level * 4 + markBurst);
+        APHELIOS_WEAPON_ORDER.forEach((weapon) => { marks[weapon] = 0; });
+        message += ` 强化月蚀引爆全部${totalMarks}层印记（爆破基础伤害+${markBurst}）。`;
+        if (main === "calibrum") {
+          damage += Math.round(5 + h.ad * 0.35);
+          if (h.aphChakrams > 0) { damage += h.aphChakrams * Math.round(4 + h.ad * 0.25); message += ` 月闪爆破发射${h.aphChakrams}枚折镜飞轮。`; h.aphChakrams = 0; }
+          addMark("calibrum", 2);
+          message += " 重新施加2层通碧印记，可由后续普攻逐层引爆。";
+        }
+        if (main === "severum") { const healing = Math.min(h.maxHp - h.hp, Math.round(h.maxHp * 0.25)); h.hp += healing; message += ` 断魄大幅吸血，恢复${healing}生命。`; }
+        if (main === "gravitum") { f.stunned = true; f.apheliosRootTurns = 2; message += " 坠明将敌人定身2个敌方回合。"; }
+        if (main === "infernum") { f.apheliosBlind = 5; message += " 荧焰叠满5层致盲（落空率100%）。"; }
+        if (main === "crescendum") { h.aphChakrams = Math.min(APHELIOS_MAX_CHAKRAMS, h.aphChakrams + 4); message += ` 折镜获得4枚飞轮（${h.aphChakrams}/${APHELIOS_MAX_CHAKRAMS}）。`; }
+        message += ` 以${mainName}主手完成终结。`;
       }
       f.apheliosMarks = marks;
-      if ((id === "attack" || id === "q") && (h.aphAmmo[h.aphMainWeapon] || 0) === 0) {
+      if ((id === "attack" || id === "q" || id === "r") && (h.aphAmmo[h.aphMainWeapon] || 0) === 0) {
         const previousMain = h.aphMainWeapon;
         const nextQueue = [...h.aphWeaponQueue];
         const nextMain = h.aphOffWeapon;
@@ -2270,8 +2304,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         h.aphMainWeapon = nextMain;
         h.aphOffWeapon = nextOff;
         h.aphWeaponQueue = [...nextQueue, previousMain];
-        h.aphAmmo = { ...h.aphAmmo, [previousMain]: 7 };
-        message += ` ${apheliosWeaponName(previousMain)}弹药耗尽并补充至7发，进入队尾；轮转为${apheliosWeaponName(nextMain)}主手、${apheliosWeaponName(nextOff)}副手。`;
+        h.aphAmmo = { ...h.aphAmmo, [previousMain]: APHELIOS_MAX_AMMO };
+        message += ` ${apheliosWeaponName(previousMain)}弹药耗尽并补充至${APHELIOS_MAX_AMMO}发，进入队尾；轮转为${apheliosWeaponName(nextMain)}主手、${apheliosWeaponName(nextOff)}副手。`;
       }
     }
     if (champion.id === "riven") {
@@ -2617,6 +2651,13 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       const executeLine = tahmExecuteRatio(level, base.boss || base.finalBoss, tasteBefore >= 3);
       if (f.hp / f.maxHp <= executeLine) damage = Math.max(damage, f.hp + f.shield);
     }
+    if (id === "r" && champion.id === "aphelios") {
+      const executeLine = apheliosExecuteRatio(level, run.augments.includes("execution"));
+      if (f.hp / f.maxHp <= executeLine) {
+        damage = Math.max(damage, f.hp + f.shield);
+        message += ` 月蚀触发${Math.round(executeLine * 100)}%斩杀。`;
+      }
+    }
     const criticalDamage = h.lastCritical ? damage : 0;
     h.lastCritical = false;
     if (damage > 0) {
@@ -2765,7 +2806,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     const specialStopped = f.interrupted ||
       (f.silenced && (intent.buff || intent.heal || intent.shield || intent.charge));
     const apheliosBlindChance = f.apheliosBlind > 0 && (intent.damage || intent.charge)
-      ? Math.min(base.elite || base.boss || base.finalBoss ? 0.25 : 0.36, f.apheliosBlind * 0.12)
+      ? Math.min(1, f.apheliosBlind * 0.2)
       : 0;
     const apheliosBlindMiss = apheliosBlindChance > 0 &&
       crypto.getRandomValues(new Uint8Array(1))[0] / 256 < apheliosBlindChance;
@@ -2936,7 +2977,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     f.turn += 1;
     f.interrupted = false;
     f.silenced = false;
-    f.stunned = false;
+    if (f.apheliosRootTurns > 0) {
+      f.apheliosRootTurns -= 1;
+      f.stunned = f.apheliosRootTurns > 0;
+      if (f.apheliosRootTurns > 0) message += ` 坠明定身还将持续 ${f.apheliosRootTurns} 个敌方回合。`;
+    } else f.stunned = false;
     setHero(h);
     setFoe(f);
     setHand(retainedHand);
@@ -3049,7 +3094,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
                 {[hero.aphMainWeapon, hero.aphOffWeapon].map((weapon, index) => (
                   <i className="aphelios-weapon-entry" key={`${weapon}-${index}`}>
                     <em className="aphelios-weapon-orb" style={{ "--weapon-color": APHELIOS_WEAPONS[weapon].color }} />
-                    {index === 0 ? "主" : "副"} · {APHELIOS_WEAPONS[weapon].name} {hero.aphAmmo[weapon]}/7
+                    {index === 0 ? "主" : "副"} · {APHELIOS_WEAPONS[weapon].name} {hero.aphAmmo[weapon]}/{APHELIOS_MAX_AMMO}
                   </i>
                 ))}
               </span>
@@ -3105,8 +3150,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
             <span>⬡ 护盾 {foe.shield}</span>
             {champion.id === "darius" && <span className="enemy-debuff">✦ 流血 {foe.bleed}/{run.augments.includes("bloodEmpire") ? 7 : 5} · 回合结束造成 {Math.round(foe.bleed * (run.augments.includes("bloodEmpire") ? 3 : 2) * HERO_DAMAGE_SCALE)} 伤害</span>}
             {champion.id === "tahmkench" && <span className={`enemy-debuff ${foe.taste >= 3 ? "trigger-ready" : ""}`}>◆ 品味 {foe.taste}/3 · {foe.taste >= 3 ? "Q控制 / R强化吞噬" : "A叠1层 · W叠2层"}</span>}
-            {champion.id === "aphelios" && foe.apheliosBlind > 0 && <span className="enemy-debuff">☄ 致盲 {foe.apheliosBlind}/3 · 伤害行动有几率落空</span>}
-            {foe.stunned && <span>眩晕：无法行动</span>}
+            {champion.id === "aphelios" && foe.apheliosBlind > 0 && <span className="enemy-debuff">☄ 致盲 {foe.apheliosBlind}/5 · 落空率 {foe.apheliosBlind * 20}%</span>}
+            {foe.stunned && <span>{foe.apheliosRootTurns > 0 ? `坠明定身：剩余 ${foe.apheliosRootTurns} 个敌方回合` : "眩晕：无法行动"}</span>}
             {interrupted && <span>打断：改用普攻</span>}
             {foe.stunProgress > 0 && <span>韧性压力 {foe.stunProgress}/{maxTenacity}</span>}
             {foe.controlWard && <span>下次眩晕免疫</span>}
