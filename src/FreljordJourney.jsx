@@ -111,6 +111,10 @@ const HERO_DAMAGE_SCALE = 0.35;
 const BATTLE_VICTORY_TRANSITION_MS = 1000;
 const BLOODTHIRSTER_LIFESTEAL = 0.18;
 const BLOODTHIRSTER_MAX_SHIELD_RATIO = 0.12;
+const CHO_FEAST_GROWTH = 5;
+const TAHM_FEAST_GROWTH = 4;
+const CHO_VICTORY_HP_GROWTH = 2;
+const TAHM_VICTORY_HP_GROWTH = 2;
 
 const APHELIOS_WEAPON_ORDER = ["calibrum", "severum", "gravitum", "infernum", "crescendum"];
 const APHELIOS_WEAPONS = {
@@ -134,7 +138,7 @@ const tahmExecuteRatio = (level, isBoss, fullTaste) => {
 };
 
 const tahmShieldAmount = (hero, shieldItems, hasMoonstone, hasDawncore) => {
-  const baseShield = Math.round(Math.max(hero.maxHp * 0.06, hero.grayDamage * 0.45));
+  const baseShield = Math.round(Math.max(hero.maxHp * 0.05, hero.grayDamage * 0.4));
   return Math.round(
     baseShield *
       (hasMoonstone ? 1.25 : 1) *
@@ -156,7 +160,7 @@ const championRoster = {
     name: "科加斯",
     role: "坦克 · 法师",
     image: "/game-icons/cho.png",
-    hp: 86,
+    hp: 78,
     ad: 5,
     ap: 0,
     color: "#9c63cb",
@@ -354,7 +358,7 @@ const championRoster = {
     name: "塔姆",
     role: "坦克 · 法坦",
     image: "/game-icons/tahmkench.png",
-    hp: 92,
+    hp: 84,
     ad: 5,
     ap: 1,
     color: "#4e9b88",
@@ -573,7 +577,7 @@ const championBuilds = {
 };
 
 const championGuides = {
-  cho: { loop: "用Q眩晕跳过敌方回合，W打断危险行动，E强化普攻压低血线，最后用R盛宴斩杀成长。", control: "Q是眩晕：敌人无法行动；W是打断：敌人仍会改用普攻。", warning: "盛宴必须进入卡牌显示的斩杀线；每次斩杀英雄单位永久增加8点最大生命且无上限，并强化心之钢、九头蛇与裂隙制造者。" },
+  cho: { loop: "用Q眩晕跳过敌方回合，W打断危险行动，E强化普攻压低血线，最后用R盛宴斩杀成长。", control: "Q是眩晕：敌人无法行动；W是打断：敌人仍会改用普攻。", warning: "盛宴必须进入卡牌显示的斩杀线；每次斩杀英雄单位永久增加5点最大生命且无上限，并强化心之钢、九头蛇与裂隙制造者。" },
   darius: { loop: "用普攻和W快速叠流血，Q维持续航，满层后以R打出最高爆发。", control: "E只打断特殊行动，敌人随后改用普攻；它不会让敌人跳过回合。", warning: "集齐朔极之矛、实验性海克斯板甲和公理圆弧后，满层流血可让R回手并返还2能量，形成无限断头台。" },
   twistedfate: { loop: "打出W后三选一：蓝牌回能、红牌增伤、金牌控制；所选牌由下一张A触发。R标记后接Q爆发。", control: "金牌可直接选择。普通怪命中即眩晕；精英与BOSS需要累计2点韧性压力。", warning: "每次使用E都会累计1金币，战斗胜利时统一结算；R会抽牌并让下一张Q提高50%伤害。" },
   jinx: { loop: "机枪连续普攻叠至3层后开始抽牌循环；需要爆发时用Q切换火箭，W与R负责远程收割。", control: "E嚼火者是眩晕：敌人本回合完全无法行动；赛瑞尔达强化的W只是打断。", warning: "金克斯牌组只保留1张切枪Q，其余替换为A普攻；机枪抽牌每回合有上限，破败与饮血剑提供续航。" },
@@ -2088,7 +2092,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         (0.22 + level * 0.04 + (run.augments.includes("execution") ? 0.08 : 0)),
     );
     if (foe.hp <= threshold) damage = Math.max(damage, foe.hp + foe.shield);
-    return `造成 ${damage} 点伤害。敌人生命 ≤ ${threshold} 时直接斩杀；成功斩杀永久最大生命 +8，无次数上限（已盛宴 ${hero.feast} 次）。`;
+    const feastGrowth = champion.id === "cho" ? CHO_FEAST_GROWTH : 0;
+    return `造成 ${damage} 点伤害。敌人生命 ≤ ${threshold} 时直接斩杀；成功斩杀永久最大生命 +${feastGrowth}，无次数上限（已盛宴 ${hero.feast} 次）。`;
   };
 
   const damageFoe = (target, damage) => {
@@ -2787,7 +2792,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       (champion.id === "tahmkench" ||
         (champion.id === "cho" && (base.boss || base.finalBoss)))
     ) {
-      const growth = champion.id === "tahmkench" ? 6 : 8;
+      const growth = champion.id === "tahmkench" ? TAHM_FEAST_GROWTH : CHO_FEAST_GROWTH;
       const totalGrowth = champion.id === "tahmkench" && run.augments.includes("thickSkin") ? growth + Math.max(1, Math.round(h.maxHp * 0.04)) : growth;
       h.maxHp += totalGrowth;
       h.hp += totalGrowth;
@@ -3450,11 +3455,11 @@ const applyVictoryGrowth = (hero, championId) => {
     next.maxHp += amount;
     next.hp += amount;
   };
-  if (championId === "cho") { gainHealth(3); next.ap += 1; }
+  if (championId === "cho") { gainHealth(CHO_VICTORY_HP_GROWTH); next.ap += 1; }
   if (championId === "darius") { gainHealth(2); next.ad += 1; }
   if (championId === "twistedfate") next.ap += 2;
   if (championId === "jinx") { next.ad += 1; next.crit = (next.crit || 0) + 1; }
-  if (championId === "tahmkench") { gainHealth(3); next.ap += 1; }
+  if (championId === "tahmkench") { gainHealth(TAHM_VICTORY_HP_GROWTH); next.ap += 1; }
   if (championId === "riven") { gainHealth(2); next.ad += 1; }
   return next;
 };
