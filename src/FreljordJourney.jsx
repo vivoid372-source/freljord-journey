@@ -238,7 +238,7 @@ const championRoster = {
         typeName: "技能",
         cost: 1,
         icon: "✧",
-        text: "获得2层充能，使后续普攻附加魔法伤害；每场战斗首次使用时，胜利结算额外获得2+强化等级金币。",
+        text: "获得2层充能，使后续普攻附加魔法伤害；每次使用都会获得1金币，战斗胜利时统一结算。",
       },
       r: {
         id: "r",
@@ -539,7 +539,7 @@ const championBuilds = {
 const championGuides = {
   cho: { loop: "用Q眩晕跳过敌方回合，W打断危险行动，E强化普攻压低血线，最后用R盛宴斩杀成长。", control: "Q是眩晕：敌人无法行动；W是打断：敌人仍会改用普攻。", warning: "盛宴必须进入卡牌显示的斩杀线；每次斩杀英雄单位永久增加8点最大生命且无上限，并强化心之钢、九头蛇与裂隙制造者。" },
   darius: { loop: "用普攻和W快速叠流血，Q维持续航，满层后以R打出最高爆发。", control: "E只打断特殊行动，敌人随后改用普攻；它不会让敌人跳过回合。", warning: "集齐朔极之矛、实验性海克斯板甲和公理圆弧后，满层流血可让R回手并返还2能量，形成无限断头台。" },
-  twistedfate: { loop: "打出W后三选一：蓝牌回能、红牌增伤、金牌控制；所选牌由下一张A触发。R标记后接Q爆发。", control: "金牌可直接选择。普通怪命中即眩晕；精英与BOSS需要累计2点韧性压力。", warning: "每场首次E会在胜利结算时额外获得2+强化等级金币，重复使用只刷新充能；R会抽牌并让下一张Q提高50%伤害。" },
+  twistedfate: { loop: "打出W后三选一：蓝牌回能、红牌增伤、金牌控制；所选牌由下一张A触发。R标记后接Q爆发。", control: "金牌可直接选择。普通怪命中即眩晕；精英与BOSS需要累计2点韧性压力。", warning: "每次使用E都会累计1金币，战斗胜利时统一结算；R会抽牌并让下一张Q提高50%伤害。" },
   jinx: { loop: "机枪连续普攻叠至3层后开始抽牌循环；需要爆发时用Q切换火箭，W与R负责远程收割。", control: "E嚼火者是眩晕：敌人本回合完全无法行动；赛瑞尔达强化的W只是打断。", warning: "金克斯牌组只保留1张切枪Q，其余替换为A普攻；机枪抽牌每回合有上限，破败与饮血剑提供续航。" },
   tahmkench: { loop: "普攻叠1层、W叠2层品味；满层后在Q控制与R强化吞噬之间取舍，E在敌方行动前刷新临时护盾。", control: "满3层Q消耗品味并施加1点韧性压力；普通敌人立即眩晕，精英与BOSS需要累计2点。W只在危险行动时打断。", warning: "E护盾不能跨敌方行动保留或重复叠加；满层R伤害提高50%并提高斩杀线。" },
   riven: { loop: "技能获得符文充能，A消耗充能追加伤害；Q前两段回手，第三段打断。E减免下一张Q，三段Q与穿插A总计恰好消耗3能量。", control: "Q3稳定打断特殊行动，敌人仍会改用普攻；W需要先积攒2层符文充能才能施加1点韧性压力。", warning: "R第一段提高20%AD并变为疾风斩；两回合内不打出疾风斩，强化与二段R都会消失。" },
@@ -1661,7 +1661,6 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     empowered: false,
     selectedCard: null,
     trickCharges: 0,
-    trickGoldClaimed: false,
     battleBonusGold: 0,
     weapon: "机枪",
     minigun: 0,
@@ -1870,10 +1869,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         return `造成 ${previewDamage(id, Math.round((9 + level * 4 + hero.ap) * (foe.marked ? 1.5 : 1)))} 点伤害${foe.marked ? "并消耗命运标记" : ""}。`;
       if (id === "w")
         return "三选一：蓝牌恢复2能量、红牌额外造成伤害、金牌施加眩晕；所选牌替换下一张A。";
-      if (id === "e") {
-        const bonusGold = 2 + level;
-        return `获得 ${2 + Math.floor(level / 2)} 层卡牌骗术，后续每次普攻附加 ${Math.round(4 + hero.ap * 0.45)} 点伤害；${hero.trickGoldClaimed ? `本场金币奖励已获取（胜利额外+${hero.battleBonusGold}）` : `本场首次使用，胜利结算额外获得${bonusGold}金币`}。`;
-      }
+      if (id === "e") return `获得 ${2 + Math.floor(level / 2)} 层卡牌骗术，后续每次普攻附加 ${Math.round(4 + hero.ap * 0.45)} 点伤害；每次使用累计1金币，本场已累计${hero.battleBonusGold}金币。`;
       return `造成 ${previewDamage(id, Math.round(5 + hero.ap * 0.4 + level * 2))} 点伤害，标记敌人并使下一次万能牌伤害提高50%，抽2张牌。`;
     }
     if (champion.id === "jinx") {
@@ -2139,12 +2135,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       }
       if (id === "e") {
         h.trickCharges = 2 + Math.floor(level / 2);
-        if (!h.trickGoldClaimed) {
-          const bonusGold = 2 + level;
-          h.trickGoldClaimed = true;
-          h.battleBonusGold += bonusGold;
-          message = `获得 ${h.trickCharges} 层卡牌骗术；胜利结算额外获得${bonusGold}金币。`;
-        } else message = `刷新为 ${h.trickCharges} 层卡牌骗术；本场金币奖励已获取。`;
+        h.battleBonusGold += 1;
+        message = `获得 ${h.trickCharges} 层卡牌骗术并累计1金币；本场胜利将额外获得${h.battleBonusGold}金币。`;
       }
       if (id === "r") {
         damage = Math.round(5 + h.ap * 0.4 + level * 2);
