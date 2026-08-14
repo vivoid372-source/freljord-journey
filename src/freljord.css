@@ -1127,6 +1127,16 @@ button {
   font-size: 35px;
   margin: 10px 0 5px;
   color: #a6eafb;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+.card-icon img {
+  display: block;
+  width: 1em;
+  height: 1em;
+  object-fit: cover;
+  border-radius: 4px;
 }
 .game-card > b {
   font:
@@ -2415,7 +2425,7 @@ button {
 }
 .hero-detail-layout .champion-card{display:grid;grid-template-columns:190px minmax(0,1fr);align-items:center}.hero-detail-layout .champion-art:after{display:none}.hero-detail-layout .champion-copy{padding:22px 24px}.hero-detail-layout .champion-copy h2{font-size:30px}.hero-detail-layout .build-tags{flex-wrap:wrap}.hero-detail-layout .available-tag{top:10px;left:10px}
 
-.compact-heading{padding-bottom:22px}.compact-heading h1{font-size:43px}.champion-roster{width:min(1120px,calc(100% - 40px));margin:0 auto 24px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;position:relative;z-index:2}.champion-choice{min-width:0;padding:8px;display:flex;align-items:center;gap:10px;text-align:left;background:rgba(7,18,27,.9);border:1px solid #294454;cursor:pointer;transition:.2s}.champion-choice:hover{transform:translateY(-3px);border-color:var(--champion-color)}.champion-choice.selected{border-color:var(--champion-color);box-shadow:0 0 24px color-mix(in srgb,var(--champion-color) 28%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--champion-color) 15%,#07121b),#07121b)}.champion-choice img{width:62px;height:62px;object-fit:cover;border:1px solid var(--champion-color)}.champion-choice span{min-width:0;display:flex;flex-direction:column}.champion-choice small{color:#7693a2;font-size:8px;white-space:nowrap}.champion-choice b{font:18px Georgia,'Songti SC',serif;margin:3px 0;color:#eefaff}.champion-choice em{font-style:normal;color:var(--champion-color);font-size:9px}.hero-detail-layout .champion-card.selected{border-color:var(--champion-color)}.hero-detail-layout .role,.hero-detail-layout .build-tags span{color:var(--champion-color)}.hero-detail-layout .build-tags span{border-color:color-mix(in srgb,var(--champion-color) 42%,transparent)}.selected-skills{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:13px 0}.selected-skills>span{display:flex;flex-direction:column;padding:8px 10px;border:1px solid var(--line);background:#091823}.selected-skills b{font-size:11px;color:#dff5fb}.selected-skills small{font-size:8px;color:#7996a4;line-height:1.45;margin-top:3px}.unit-portrait.cho{background:radial-gradient(circle,var(--champion-color,#672c83),#151c27 62%,#090c12)}
+.compact-heading{padding-bottom:22px}.compact-heading h1{font-size:43px}.champion-roster{width:min(1120px,calc(100% - 40px));margin:0 auto 24px;display:grid;grid-template-columns:repeat(6,1fr);gap:10px;position:relative;z-index:2}.champion-choice{min-width:0;padding:8px;display:flex;align-items:center;gap:10px;text-align:left;background:rgba(7,18,27,.9);border:1px solid #294454;cursor:pointer;transition:.2s}.champion-choice:hover{transform:translateY(-3px);border-color:var(--champion-color)}.champion-choice.selected{border-color:var(--champion-color);box-shadow:0 0 24px color-mix(in srgb,var(--champion-color) 28%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--champion-color) 15%,#07121b),#07121b)}.champion-choice img{width:62px;height:62px;object-fit:cover;border:1px solid var(--champion-color)}.champion-choice span{min-width:0;display:flex;flex-direction:column}.champion-choice small{color:#7693a2;font-size:8px;white-space:nowrap}.champion-choice b{font:18px Georgia,'Songti SC',serif;margin:3px 0;color:#eefaff}.champion-choice em{font-style:normal;color:var(--champion-color);font-size:9px}.hero-detail-layout .champion-card.selected{border-color:var(--champion-color)}.hero-detail-layout .role,.hero-detail-layout .build-tags span{color:var(--champion-color)}.hero-detail-layout .build-tags span{border-color:color-mix(in srgb,var(--champion-color) 42%,transparent)}.selected-skills{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:13px 0}.selected-skills>span{display:flex;flex-direction:column;padding:8px 10px;border:1px solid var(--line);background:#091823}.selected-skills b{font-size:11px;color:#dff5fb}.selected-skills small{font-size:8px;color:#7996a4;line-height:1.45;margin-top:3px}.unit-portrait.cho{background:radial-gradient(circle,var(--champion-color,#672c83),#151c27 62%,#090c12)}
 
 @media(max-width:900px){.champion-roster{grid-template-columns:repeat(3,1fr)}.hero-detail-layout{grid-template-columns:1fr}.selected-skills{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.champion-roster{width:calc(100% - 20px);grid-template-columns:repeat(2,1fr);gap:7px}.champion-choice{padding:6px;gap:7px}.champion-choice img{width:48px;height:48px}.champion-choice b{font-size:15px}.champion-choice small{display:none}.compact-heading h1{font-size:34px}.selected-skills{grid-template-columns:1fr}.hero-detail-layout .champion-art{height:240px}}
@@ -4014,4 +4024,103 @@ button {
   .transition-map .route-node { min-height: 42px; }
   .gear-shop-screen { grid-template-rows: 42px 91px 32px minmax(0, 1fr) 52px; }
   .gear-shop-screen .node-heading { height: 91px; }
+}
+
+/* 满装训练：价格是第三行信息，单独排版，避免在手机窄列中逐字换行。 */
+.attribute-training-screen,
+.attribute-training-screen button {
+  font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+}
+.attribute-training-screen .node-heading h1 {
+  font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.attribute-training-screen .rest-options button > small {
+  display: block;
+  margin-top: 12px;
+  color: #dfb36f;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 600px) {
+  .attribute-training-screen {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100dvh;
+    min-height: 620px;
+    padding: 0 10px 10px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .attribute-training-screen > .battle-topbar { flex: 0 0 42px; }
+  .attribute-training-screen > .owned-augments { flex: 0 0 26px; }
+  .attribute-training-screen .node-heading {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    min-height: 104px;
+    padding: 10px 4px;
+  }
+  .attribute-training-screen .node-heading h1 {
+    margin: 5px 0;
+    font-size: clamp(22px, 6.4vw, 29px);
+    line-height: 1.18;
+  }
+  .attribute-training-screen .node-heading p {
+    font-size: 9px;
+    line-height: 1.45;
+  }
+  .attribute-training-screen .rest-options {
+    flex: 1 0 auto;
+    grid-template-rows: repeat(3, minmax(112px, 1fr));
+    gap: 8px;
+  }
+  .attribute-training-screen .rest-options button {
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    padding: 10px 13px;
+    column-gap: 11px;
+    row-gap: 2px;
+  }
+  .attribute-training-screen .rest-options button > strong {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    align-self: center;
+  }
+  .attribute-training-screen .rest-options button > b {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 16px;
+    line-height: 1.25;
+  }
+  .attribute-training-screen .rest-options button > p {
+    grid-column: 2;
+    grid-row: 2;
+    margin: 3px 0;
+    font-size: 9px;
+    line-height: 1.45;
+  }
+  .attribute-training-screen .rest-options button > small {
+    grid-column: 2;
+    grid-row: 3;
+    margin: 2px 0 0;
+    font-size: 8px;
+    line-height: 1.3;
+    white-space: normal;
+  }
+  .attribute-training-screen .node-actions {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    width: 100%;
+    min-height: 68px;
+    margin: 8px 0 0;
+    padding-top: 8px;
+    gap: 10px;
+  }
+  .attribute-training-screen .node-actions span { font-size: 9px; }
+  .attribute-training-screen .skip-gear { padding: 10px 13px; font-size: 10px; }
 }

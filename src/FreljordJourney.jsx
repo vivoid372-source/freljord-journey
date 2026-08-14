@@ -75,6 +75,32 @@ const starterDeck = [...baseStarterDeck];
 // 玩家所有直接伤害与卡牌预览共用该倍率，确保显示数值与实际结算一致。
 const HERO_DAMAGE_SCALE = 0.35;
 
+const tahmExecuteRatio = (level, isBoss, fullTaste) => {
+  const baseRatio = isBoss
+    ? Math.min(0.12, 0.06 + level * 0.015)
+    : Math.min(0.22, 0.12 + level * 0.025);
+  return fullTaste
+    ? Math.min(isBoss ? 0.22 : 0.34, baseRatio + (isBoss ? 0.1 : 0.12))
+    : baseRatio;
+};
+
+const tahmShieldAmount = (hero, shieldItems, hasMoonstone, hasDawncore) => {
+  const baseShield = Math.round(Math.max(hero.maxHp * 0.06, hero.grayDamage * 0.45));
+  return Math.round(
+    baseShield *
+      (hasMoonstone ? 1.25 : 1) *
+      (hasDawncore ? 1 + shieldItems * 0.06 : 1),
+  );
+};
+
+const rivenShieldAmount = (hero, level, shieldItems, hasMoonstone, hasDawncore, hasValorMastery) =>
+  Math.round(
+    (6 + hero.ad * 0.8 + level * 2) *
+      (hasMoonstone ? 1.25 : 1) *
+      (hasDawncore ? 1 + shieldItems * 0.06 : 1) *
+      (hasValorMastery ? 1.3 : 1),
+  );
+
 const championRoster = {
   cho: {
     id: "cho",
@@ -284,7 +310,7 @@ const championRoster = {
     ap: 1,
     color: "#4e9b88",
     mechanic: "培养品味",
-    description: "普攻叠加品味，Q眩晕满层敌人，吞噬完成生命成长。",
+    description: "普攻与W叠加品味，满层后可用Q控制或用R强化吞噬。",
     builds: ["巨胃肉坦", "裂隙AP", "盾盾流"],
     preferredTags: ["生命", "法强", "恢复"],
     skills: {
@@ -301,7 +327,7 @@ const championRoster = {
         typeName: "技能",
         cost: 1,
         icon: "➶",
-        text: "造成魔法伤害；3层品味时打断并眩晕。",
+        text: "造成魔法伤害；未满时施加1层品味，满3层时消耗品味并施加1点韧性压力。",
       },
       w: {
         id: "w",
@@ -311,7 +337,7 @@ const championRoster = {
         typeName: "技能",
         cost: 1,
         icon: "⌁",
-        text: "造成魔法伤害并打断蓄力。",
+        text: "造成魔法伤害并施加2层品味；敌人准备危险行动时将其打断。",
       },
       e: {
         id: "e",
@@ -321,7 +347,7 @@ const championRoster = {
         typeName: "技能",
         cost: 1,
         icon: "⬡",
-        text: "根据本场已损生命获得护盾。",
+        text: "刷新一层临时护盾，数值为最大生命6%或本场已损生命45%（取较高值）；敌方行动后消失。",
       },
       r: {
         id: "r",
@@ -331,11 +357,81 @@ const championRoster = {
         typeName: "终极技能",
         cost: 2,
         icon: "◆",
-        text: "满层品味提高吞噬伤害；仅能斩杀残血敌人，BOSS斩杀线更低。",
+        text: "吞噬残血敌人；消耗3层品味可使伤害提高50%，并显著提高斩杀线。",
+      },
+    },
+  },
+  riven: {
+    id: "riven",
+    name: "锐雯",
+    role: "战士 · 连招爆发",
+    image: "/game-icons/riven.png",
+    hp: 78,
+    ad: 7,
+    ap: 0,
+    color: "#79c9b2",
+    mechanic: "符文连招",
+    description: "技能积蓄符文之刃，穿插普攻并以三段折翼之舞和疾风斩完成爆发。",
+    builds: ["勇气盾舞", "光速连招", "疾风穿甲"],
+    preferredTags: ["战士", "连招", "护盾"],
+    skills: {
+      attack: {
+        ...skills.attack,
+        name: "符文之刃",
+        text: "造成AD伤害；消耗1层符文充能时附加4+AD×0.6基础伤害。",
+      },
+      q: {
+        id: "q",
+        key: "Q",
+        name: "折翼之舞",
+        type: "spell",
+        typeName: "技能",
+        cost: 1,
+        icon: "△",
+        text: "连续施放三段；前两段返回手牌，第三段造成更高伤害并打断特殊行动。",
+      },
+      w: {
+        id: "w",
+        key: "W",
+        name: "震魂怒吼",
+        type: "spell",
+        typeName: "技能",
+        cost: 1,
+        icon: "✦",
+        text: "造成物理伤害；拥有至少2层符文充能时消耗2层并施加1点韧性压力。",
+      },
+      e: {
+        id: "e",
+        key: "E",
+        name: "勇往直前",
+        type: "spell",
+        typeName: "技能",
+        cost: 1,
+        icon: "⬡",
+        text: "刷新一层临时护盾，并使下一张Q或W的能量消耗降低1点。",
+      },
+      r: {
+        id: "r",
+        key: "R",
+        name: "放逐之锋",
+        type: "finisher",
+        typeName: "终极技能",
+        cost: 2,
+        icon: "◆",
+        text: "第一段提高25%AD并返回手牌；第二段变为疾风斩，对残血敌人造成更高伤害。",
       },
     },
   },
 };
+
+Object.values(championRoster).forEach((champion) => {
+  champion.skills = Object.fromEntries(
+    Object.entries(champion.skills).map(([id, skill]) => [
+      id,
+      { ...skill, image: `/game-icons/${champion.id}-${id === "attack" ? "a" : id}.png` },
+    ]),
+  );
+});
 
 const championBuilds = {
   darius: [
@@ -354,6 +450,11 @@ const championBuilds = {
     { id: "tahm_ap", name: "裂隙AP", items: ["riftmaker", "nashor", "lichbane", "shadowflame", "rabadon"] },
     { id: "tahm_shield", name: "盾盾流", items: ["fimbulwinter", "moonstone", "despair", "dawncore", "visage", "frozenheart"] },
   ],
+  riven: [
+    { id: "riven_shield", name: "勇气盾舞", items: ["fimbulwinter", "moonstone", "dawncore", "frozenheart", "sterak", "despair", "iceborn"] },
+    { id: "riven_combo", name: "光速连招", items: ["shojin", "trinity", "essence", "hexplate", "axiom", "cosmic"] },
+    { id: "riven_lethality", name: "疾风穿甲", items: ["youmuu", "serylda", "collector", "axiom", "deathdance", "essence"] },
+  ],
   cho: [
     { id: "cho_tank", name: "心钢巨兽", items: ["heartsteel", "sunfire", "titanic", "jaksho", "warmog", "frozenheart"] },
     { id: "cho_ap", name: "裂隙法坦", items: ["riftmaker", "lichbane", "shadowflame", "rabadon", "nashor"] },
@@ -371,7 +472,8 @@ const championGuides = {
   darius: { loop: "用普攻和W快速叠流血，Q维持续航，满层后以R打出最高爆发。", control: "E只打断特殊行动，敌人随后改用普攻；它不会让敌人跳过回合。", warning: "集齐朔极之矛、实验性海克斯板甲和公理圆弧后，满层流血可让R回手并返还2能量，形成无限断头台。" },
   twistedfate: { loop: "打出W后三选一：蓝牌回能、红牌增伤、金牌控制；所选牌由下一张A触发。R标记后接Q爆发。", control: "金牌可直接选择。普通怪命中即眩晕；精英与BOSS需要累计2点韧性压力。", warning: "W不造成伤害；选牌后必须用A打出，结算后恢复普通攻击。R会抽牌并让下一张Q提高50%伤害。" },
   jinx: { loop: "机枪连续普攻叠至3层后开始抽牌循环；需要爆发时用Q切换火箭，W与R负责远程收割。", control: "E嚼火者是眩晕：敌人本回合完全无法行动；赛瑞尔达强化的W只是打断。", warning: "金克斯牌组只保留1张切枪Q，其余替换为A普攻；机枪抽牌每回合有上限，破败与饮血剑提供续航。" },
-  tahmkench: { loop: "普攻叠3层品味；满层Q消耗品味并眩晕，E把累计受伤转为护盾，R用于残血收割。", control: "只有满3层品味的Q是真正眩晕；W只是打断，敌人会改用普攻。", warning: "3层品味只让R伤害提高35%，不会直接处决；BOSS的吞噬斩杀线更低。" },
+  tahmkench: { loop: "普攻叠1层、W叠2层品味；满层后在Q控制与R强化吞噬之间取舍，E在敌方行动前刷新临时护盾。", control: "满3层Q消耗品味并施加1点韧性压力；普通敌人立即眩晕，精英与BOSS需要累计2点。W只在危险行动时打断。", warning: "E护盾不能跨敌方行动保留或重复叠加；满层R伤害提高50%并提高斩杀线。" },
+  riven: { loop: "技能获得符文充能，A消耗充能追加伤害；Q前两段回手，第三段打断。E减免下一张Q或W，三段Q与穿插A总计恰好消耗3能量。", control: "Q3稳定打断特殊行动，敌人仍会改用普攻；W需要先积攒2层符文充能才能施加1点韧性压力。", warning: "R第一段提高25%AD并变为疾风斩；两回合内不打出疾风斩，强化与二段R都会消失。" },
 };
 
 const equipment = {
@@ -532,19 +634,19 @@ const equipment = {
   phantom: { id: "phantom", name: "幻影之舞", price: 26, image: "/game-icons/phantom.png", crit: 18, tags: ["普攻", "暴击", "抽牌"], routes: ["jinx_draw", "jinx_crit"], text: "每打出第 2 张 A，抽 1 张牌；每回合最多触发 2 次。" },
   kraken: { id: "kraken", name: "海妖杀手", price: 29, image: "/game-icons/kraken.png", ad: 4, tags: ["机枪", "普攻"], routes: ["jinx_draw"], text: "每第 3 次普攻额外造成 14+AD×0.8 伤害。" },
   manamune: { id: "manamune", name: "魔宗", price: 26, image: "/game-icons/manamune.png", ad: 3, tags: ["穿甲", "施法"], routes: ["jinx_poke"], text: "W 与 R 额外造成当前剩余能量×4的伤害；每场第 3 次施法后抽 1 张牌。" },
-  youmuu: { id: "youmuu", name: "幽梦之灵", price: 27, image: "/game-icons/youmuu.png", ad: 5, armorPen: 5, tags: ["穿甲", "爆发"], routes: ["jinx_poke"], text: "每回合第一张 W 或 R 额外造成 8 点伤害。" },
+  youmuu: { id: "youmuu", name: "幽梦之灵", price: 27, image: "/game-icons/youmuu.png", ad: 5, armorPen: 5, tags: ["穿甲", "爆发"], routes: ["jinx_poke", "riven_lethality"], text: "每回合第一张造成伤害的 W 或 R，基础伤害增加 8 点。" },
   serylda: { id: "serylda", name: "赛瑞尔达的怨恨", price: 31, image: "/game-icons/serylda.png", ad: 4, armorPen: 7, tags: ["穿甲", "控制"], routes: ["jinx_poke"], text: "W 能打断危险行动；所有伤害最多额外穿透 7 点护盾。" },
-  axiom: { id: "axiom", name: "公理圆弧", price: 32, image: "/game-icons/axiom.png", ad: 5, armorPen: 4, tags: ["穿甲", "终结", "能量"], routes: ["jinx_poke", "darius_infinite_r"], text: "每次打出 R 后恢复 1 能量；每场首次打出 R 时，将一张 R 返回手牌。" },
-  fimbulwinter: { id: "fimbulwinter", name: "末日寒冬", price: 28, image: "/game-icons/fimbulwinter.png", hp: 18, tags: ["护盾", "控制"], routes: ["tahm_shield"], text: "技能成功打断敌人时，获得最大生命 10% 的护盾。" },
-  despair: { id: "despair", name: "无终恨意", price: 30, image: "/game-icons/despair.png", hp: 20, tags: ["护盾", "恢复", "生命"], routes: ["tahm_tank", "tahm_shield"], text: "护盾被消耗后，对敌人造成消耗量 50% 的伤害并恢复等量生命。" },
-  moonstone: { id: "moonstone", name: "月石再生器", price: 26, image: "/game-icons/moonstone.png", ap: 4, hp: 10, tags: ["护盾", "恢复"], routes: ["tahm_shield"], text: "E生成的护盾提高 35%，并恢复该护盾数值 20% 的生命。" },
-  dawncore: { id: "dawncore", name: "黎明核心", price: 34, image: "/game-icons/dawncore.png", ap: 6, tags: ["护盾", "法强"], routes: ["tahm_shield", "tahm_ap"], text: "每持有一件护盾装备，E生成的护盾与总AP提高 8%。" },
+  axiom: { id: "axiom", name: "公理圆弧", price: 32, image: "/game-icons/axiom.png", ad: 5, armorPen: 4, tags: ["穿甲", "终结", "能量"], routes: ["jinx_poke", "darius_infinite_r", "riven_combo", "riven_lethality"], text: "每次打出 R 后恢复 1 能量；每场首次触发回手。锐雯改为首次疾风斩后让放逐之锋回手。" },
+  fimbulwinter: { id: "fimbulwinter", name: "末日寒冬", price: 28, image: "/game-icons/fimbulwinter.png", hp: 18, tags: ["护盾", "控制"], routes: ["tahm_shield"], text: "技能成功打断敌人时，获得最大生命 7% 的护盾。" },
+  despair: { id: "despair", name: "无终恨意", price: 30, image: "/game-icons/despair.png", hp: 20, tags: ["护盾", "恢复", "生命"], routes: ["tahm_tank", "tahm_shield"], text: "护盾被消耗后，对敌人造成消耗量 35% 的伤害并恢复等量生命。" },
+  moonstone: { id: "moonstone", name: "月石再生器", price: 26, image: "/game-icons/moonstone.png", ap: 4, hp: 10, tags: ["护盾", "恢复"], routes: ["tahm_shield"], text: "E生成的护盾提高 25%，并恢复该护盾数值 15% 的生命。" },
+  dawncore: { id: "dawncore", name: "黎明核心", price: 34, image: "/game-icons/dawncore.png", ap: 6, tags: ["护盾", "法强"], routes: ["tahm_shield", "tahm_ap"], text: "每持有一件护盾装备，E生成的护盾与总AP提高 6%。" },
   trinity: { id: "trinity", name: "三相之力", price: 31, image: "/game-icons/trinity.png", ad: 4, hp: 10, tags: ["战士", "连招", "普攻"], text: "每回合第一次打出技能后，为下一张 A 充能；该 A 的基础伤害增加 6 + AD×0.7。" },
   guinsoo: { id: "guinsoo", name: "鬼索的狂暴之刃", price: 29, image: "/game-icons/guinsoo.svg", ad: 3, ap: 3, tags: ["普攻", "连击"], text: "每第 3 张 A 的基础伤害增加 8 + AD×0.5，普攻计数跨回合保留。" },
   cosmic: { id: "cosmic", name: "宇宙驱动", price: 28, image: "/game-icons/cosmic.svg", ap: 6, hp: 8, tags: ["法强", "抽牌", "技能"], text: "每回合打出的第 2 张技能牌额外抽 1 张牌；每回合触发一次。" },
   horizon: { id: "horizon", name: "视界专注", price: 30, image: "/game-icons/horizon.svg", ap: 7, tags: ["法强", "预判", "技能"], text: "敌人显示危险或蓄力意图时，Q 与 W 的总伤害提高 25%。" },
   hexplate: { id: "hexplate", name: "实验性海克斯板甲", price: 32, image: "/game-icons/hexplate.svg", ad: 4, hp: 10, tags: ["终极技能", "能量", "抽牌"], routes: ["darius_fighter", "darius_infinite_r", "jinx_poke", "tf_burst"], text: "每次打出 R 后恢复 1 能量；每场战斗首次触发时额外抽 1 张牌。" },
-  frozenheart: { id: "frozenheart", name: "冰霜之心", price: 27, image: "/game-icons/frozenheart.svg", hp: 16, tags: ["生命", "护盾", "技能"], text: "每回合第一次打出 E，恢复 1 能量并获得最大生命 8% 的护盾。" },
+  frozenheart: { id: "frozenheart", name: "冰霜之心", price: 27, image: "/game-icons/frozenheart.svg", hp: 16, tags: ["生命", "护盾", "技能"], text: "每回合第一次打出 E，恢复 1 能量并获得最大生命 6% 的护盾。" },
 };
 
 const equipmentStats = (item) => [
@@ -934,6 +1036,7 @@ const augments = [
     name: "技能电容",
     rarity: "黄金",
     icon: "△",
+    excludedChampions: ["jinx", "riven"],
     text: "Q 的能量消耗降低 1，最低为 0。",
   },
   {
@@ -974,11 +1077,14 @@ const augments = [
   { id: "conqueror", name: "征服者", rarity: "棱彩", icon: "⚔", champions: ["darius"], text: "每连续使用一张牌获得1层征服；每层使伤害+4%，回合结束清空。" },
   { id: "dunkMaster", name: "断头台大师", rarity: "黄金", icon: "◆", champions: ["darius"], text: "R 对满层流血敌人伤害提高35%，斩杀后抽1张。" },
   { id: "overclock", name: "超频机枪", rarity: "棱彩", icon: "⇈", champions: ["jinx"], text: "机枪达到3层后，每次普攻抽1张；每回合最多2次。" },
-  { id: "luckyCrit", name: "幸运暴击", rarity: "黄金", icon: "✹", champions: ["jinx", "darius"], text: "获得20%暴击率；每次暴击恢复1能量，每回合一次。" },
+  { id: "luckyCrit", name: "幸运暴击", rarity: "黄金", icon: "✹", champions: ["jinx", "darius", "riven"], text: "获得20%暴击率；每次暴击恢复1能量，每回合一次。" },
   { id: "artillery", name: "超远火力", rarity: "黄金", icon: "➶", champions: ["jinx"], text: "W与R获得6点穿甲，并对满护盾敌人造成20%额外伤害。" },
   { id: "thickSkin", name: "无底胃囊", rarity: "棱彩", icon: "⬢", champions: ["tahmkench"], text: "每次吞噬斩杀额外永久增加4%最大生命。" },
   { id: "abyssMagic", name: "深渊魔力", rarity: "黄金", icon: "◈", champions: ["tahmkench"], text: "每20点最大生命提供1AP；Q与W对满层品味目标+25%伤害。" },
-  { id: "shieldBash", name: "盾击", rarity: "黄金", icon: "⬡", champions: ["tahmkench"], text: "获得护盾时，下一次普攻附加护盾值40%的伤害。" },
+  { id: "shieldBash", name: "盾击", rarity: "黄金", icon: "⬡", champions: ["tahmkench"], text: "E生成护盾时，本回合下一张A附加该护盾值30%的伤害；末日寒冬触发时强化可保留。" },
+  { id: "valorMastery", name: "勇气剑舞", rarity: "黄金", icon: "⬡", champions: ["riven"], text: "E生成的临时护盾提高30%；本回合下一张A额外造成该次护盾值30%的伤害。" },
+  { id: "lightspeedCombo", name: "光速QA", rarity: "棱彩", icon: "⇈", champions: ["riven"], text: "每回合Q3命中时，若此前至少两张A消耗过符文充能，则恢复1能量、抽1张并让Q返回手牌；每回合一次。" },
+  { id: "windBlade", name: "断罪之风", rarity: "黄金", icon: "➶", champions: ["riven"], text: "疾风斩额外穿透8点护盾；敌人生命低于40%时，疾风斩总伤害提高30%。" },
 ];
 
 const seededRewardScore = (id, seed) => {
@@ -1053,7 +1159,7 @@ function Home({ onEnter }) {
               每场战斗后从三件完整装备中购买一件，让普攻、Q、W、E、R组成独特连招。
             </p>
             <div className="mode-details">
-              <span>五种英雄牌</span>
+              <span>六种英雄牌</span>
               <i />
               <span>五件成装</span>
               <i />
@@ -1442,19 +1548,21 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
   if (run.augments.includes("abyssMagic")) combatAp += Math.floor(run.hero.maxHp / 20);
   if (run.gear.includes("dawncore")) {
     const shieldItems = run.gear.filter((id) => equipment[id].tags.includes("护盾")).length;
-    combatAp = Math.round(combatAp * (1 + shieldItems * 0.08));
+    combatAp = Math.round(combatAp * (1 + shieldItems * 0.06));
   }
   if (run.gear.includes("rabadon")) combatAp = Math.round(combatAp * 1.3);
   const runeEnergy = run.augments.includes("energyCore") ? 1 : 0;
   const campEnergy = run.hero.energyBonus || 0;
-  const startingShield = run.augments.includes("frostSkin")
-    ? Math.round(run.hero.maxHp * 0.12)
-    : 0;
+  const startingShieldRatio =
+    (run.augments.includes("frostSkin") ? 0.12 : 0) +
+    (run.hero.openingShieldBonus || 0);
+  const startingShield = Math.round(run.hero.maxHp * startingShieldRatio);
   const maxTenacity = base.elite || base.boss || base.finalBoss ? 2 : 1;
   const [hero, setHero] = useState({
     ...run.hero,
     ap: combatAp,
     shield: startingShield,
+    temporaryShield: 0,
     energy: 3 + runeEnergy + campEnergy,
     maxEnergy: 3 + runeEnergy + campEnergy,
     turn: 1,
@@ -1486,6 +1594,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     axiomUsed: false,
     conqueror: 0,
     shieldBash: 0,
+    shieldBashTemporary: false,
     bonusDraw: 0,
     trinityReady: false,
     trinityUsed: false,
@@ -1496,6 +1605,14 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     firstStrikeUsed: false,
     disruptorUsed: false,
     controlFlowUsed: false,
+    runeCharge: 0,
+    qStage: 0,
+    valorDiscount: false,
+    bladeTurns: 0,
+    rivenBonusAd: 0,
+    rivenEmpoweredAttacksTurn: 0,
+    lightspeedUsed: false,
+    valorStrike: 0,
   });
   const [foe, setFoe] = useState({
     hp: base.hp,
@@ -1531,12 +1648,22 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
   const heartsteelReady =
     run.gear.includes("heartsteel") && hero.turn >= 2 && !hero.heartsteelUsed;
 
+  const cardCost = (id, state = hero) => {
+    let cost = skillSet[id].cost;
+    if (id === "q" && run.augments.includes("quickRupture")) cost = Math.max(0, cost - 1);
+    if (champion.id === "riven" && id === "r" && state.windSlashReady) cost = 1;
+    if (champion.id === "riven" && state.valorDiscount && (id === "q" || id === "w"))
+      cost = Math.max(0, cost - 1);
+    return cost;
+  };
+
   const previewDamage = (id, startingDamage, options = {}) => {
     const isBasicAttack = options.isBasicAttack ?? id === "attack";
     const isSpell = id !== "attack";
     const canCrit = isBasicAttack ||
       (champion.id === "darius" && id === "r") ||
-      (champion.id === "jinx" && (id === "w" || id === "r"));
+      (champion.id === "jinx" && (id === "w" || id === "r")) ||
+      (champion.id === "riven" && id === "r" && hero.windSlashReady);
     let damage = startingDamage;
 
     if (champion.id !== "cho" && id === "r" && run.augments.includes("giant"))
@@ -1557,6 +1684,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (run.gear.includes("youmuu") && !hero.pokeUsed) damage += 8;
       if (run.augments.includes("artillery") && foe.shield >= foe.maxHp * 0.1) damage = Math.round(damage * 1.2);
     }
+    if (champion.id === "riven" && (id === "w" || (id === "r" && hero.windSlashReady)) && run.gear.includes("youmuu") && !hero.pokeUsed)
+      damage += 8;
     if (canCrit && hero.crit > 0 && hero.critMeter + hero.crit >= 100)
       damage = Math.round(damage * (run.gear.includes("infinity") ? 2.25 : 1.75));
     if (run.augments.includes("conqueror"))
@@ -1589,14 +1718,15 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (run.augments.includes("echo") && hero.spells === 0 && (id === "q" || id === "w"))
         damage += 7;
     }
-    const previewCost = id === "q" && run.augments.includes("quickRupture")
-      ? Math.max(0, skillSet[id].cost - 1)
-      : skillSet[id].cost;
+    const previewCost = cardCost(id);
     if (damage > 0 && run.augments.includes("firstStrike") && !hero.firstStrikeUsed)
       damage = Math.round(damage * 1.2);
     if (damage > 0 && run.augments.includes("lastStand") && hero.energy - previewCost === 0)
       damage = Math.round(damage * 1.25);
-    return Math.max(0, Math.round(damage * HERO_DAMAGE_SCALE));
+    let scaledDamage = Math.max(0, Math.round(damage * HERO_DAMAGE_SCALE));
+    if (champion.id === "riven" && isBasicAttack && hero.valorStrike > 0)
+      scaledDamage += hero.valorStrike;
+    return scaledDamage;
   };
 
   const attemptStun = (target, power = 1) => {
@@ -1663,25 +1793,60 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (id === "attack")
         return `造成 ${previewDamage(id, hero.ad + level * 2)} 点伤害，品味 ${foe.taste}/3 → ${Math.min(3, foe.taste + 1)}/3。`;
       if (id === "q")
-      return `造成 ${previewDamage(id, Math.round(8 + level * 4 + hero.ap * 0.8))} 点伤害${foe.taste >= 3 ? "，消耗3层品味并眩晕" : "；未满3层不会眩晕"}。`;
+        return `造成 ${previewDamage(id, Math.round(8 + level * 4 + hero.ap * 0.8))} 点伤害${foe.taste >= 3 ? `，消耗3层品味并施加1点韧性压力（当前 ${foe.stunProgress}/${maxTenacity}）` : `，品味 ${foe.taste}/3 → ${Math.min(3, foe.taste + 1)}/3`}。`;
       if (id === "w")
-        return `造成 ${previewDamage(id, Math.round(11 + level * 4 + hero.ap * 0.7))} 点伤害并打断蓄力。`;
+        return `造成 ${previewDamage(id, Math.round(11 + level * 4 + hero.ap * 0.7))} 点伤害，品味 ${foe.taste}/3 → ${Math.min(3, foe.taste + 2)}/3${intent.charge || intent.dangerous ? "，并打断当前危险行动" : "；当前行动无法被打断"}。`;
       if (id === "e")
         {
-          const baseShield = Math.round(Math.max(hero.maxHp * 0.12, hero.grayDamage * 0.7));
           const shieldItems = run.gear.filter((gearId) => equipment[gearId].tags.includes("护盾")).length;
-          const shield = Math.round(baseShield * (run.gear.includes("moonstone") ? 1.35 : 1) * (run.gear.includes("dawncore") ? 1 + shieldItems * 0.08 : 1));
-          return `获得 ${shield} 点护盾${run.gear.includes("moonstone") ? `并恢复 ${Math.min(hero.maxHp - hero.hp, Math.round(shield * 0.2))} 生命` : ""}。`;
+          const shield = tahmShieldAmount(hero, shieldItems, run.gear.includes("moonstone"), run.gear.includes("dawncore"));
+          return `将现有E临时护盾刷新为 ${shield} 点${run.gear.includes("moonstone") ? `，并恢复 ${Math.min(hero.maxHp - hero.hp, Math.round(shield * 0.15))} 生命` : ""}；清空 ${hero.grayDamage} 点已损生命记录，敌方行动后剩余护盾消失。`;
         }
-      const executeRatio = base.boss || base.finalBoss
-        ? Math.min(0.16, 0.08 + level * 0.02)
-        : Math.min(0.28, 0.18 + level * 0.03);
+      const fullTaste = foe.taste >= 3;
+      const executeRatio = tahmExecuteRatio(level, base.boss || base.finalBoss, fullTaste);
       const threshold = Math.round(foe.maxHp * executeRatio);
       const baseDamage = Math.round(14 + level * 5 + hero.maxHp * 0.08 + hero.ap * 0.6);
-      const damage = foe.taste >= 3 ? Math.round(baseDamage * 1.35) : baseDamage;
+      const damage = fullTaste ? Math.round(baseDamage * 1.5) : baseDamage;
       const preview = previewDamage(id, damage);
       const actual = foe.hp / foe.maxHp <= executeRatio ? Math.max(preview, foe.hp + foe.shield) : preview;
-      return `造成 ${actual} 点伤害${foe.taste >= 3 ? "（消耗3层品味，伤害+35%）" : ""}；生命≤${threshold}时吞噬斩杀。`;
+      const growth = 6 + (run.augments.includes("thickSkin") ? Math.max(1, Math.round(hero.maxHp * 0.04)) : 0);
+      return `造成 ${actual} 点伤害${fullTaste ? "（消耗3层品味，伤害+50%）" : ""}；生命≤${threshold}（${Math.round(executeRatio * 100)}%）时吞噬斩杀，并永久获得${growth}点最大生命。`;
+    }
+    if (champion.id === "riven") {
+      if (id === "attack") {
+        const runeBonus = hero.runeCharge > 0 ? Math.round(4 + hero.ad * 0.6) : 0;
+        return `造成 ${previewDamage(id, hero.ad + level * 2 + runeBonus)} 点伤害${runeBonus ? `，消耗1层符文充能（符文之刃基础伤害+${runeBonus}）` : "；当前没有符文充能"}。`;
+      }
+      if (id === "q") {
+        const stage = (hero.qStage || 0) + 1;
+        const rawDamage = stage === 1
+          ? Math.round(7 + hero.ad * 0.75 + level * 3)
+          : stage === 2
+            ? Math.round(9 + hero.ad * 0.8 + level * 3)
+            : Math.round(12 + hero.ad * 0.9 + level * 4);
+        const comboReady = run.augments.includes("lightspeedCombo") && !hero.lightspeedUsed && hero.rivenEmpoweredAttacksTurn >= 2;
+        const canInterrupt = intent.dangerous || intent.buff || intent.heal || intent.shield || intent.charge;
+        return `第${stage}段：造成 ${previewDamage(id, rawDamage)} 点伤害并获得1层符文充能${stage < 3 ? "；结算后Q返回手牌" : `；${canInterrupt ? `打断「${intent.name}」` : "当前基础行动无法被打断"}${comboReady ? "，触发光速QA：回1能量、抽1张并让Q回手" : ""}`}。`;
+      }
+      if (id === "w") {
+        const charged = hero.runeCharge >= 2;
+        return `造成 ${previewDamage(id, Math.round(8 + hero.ad * 0.65 + level * 4))} 点伤害${charged ? `，消耗2层充能并施加1点韧性压力（当前 ${foe.stunProgress}/${maxTenacity}）` : `；需要2层符文充能才能控制（当前 ${hero.runeCharge}/2）`}；结算后获得1层符文充能。`;
+      }
+      if (id === "e") {
+        const shieldItems = run.gear.filter((gearId) => equipment[gearId].tags.includes("护盾")).length;
+        const shield = rivenShieldAmount(hero, level, shieldItems, run.gear.includes("moonstone"), run.gear.includes("dawncore"), run.augments.includes("valorMastery"));
+        const healing = run.gear.includes("moonstone") ? Math.min(hero.maxHp - hero.hp, Math.round(shield * 0.15)) : 0;
+        const valorDamage = run.augments.includes("valorMastery") ? Math.round(shield * 0.3) : 0;
+        return `将现有E临时护盾刷新为 ${shield} 点${healing ? `并恢复 ${healing} 生命` : ""}，下一张Q或W少消耗1能量；获得1层符文充能${valorDamage ? `，下一张A额外造成${valorDamage}点伤害` : ""}。敌方行动后剩余护盾消失。`;
+      }
+      if (!hero.windSlashReady) {
+        const bonusAd = Math.max(1, Math.round(hero.ad * 0.25));
+        return `获得 ${bonusAd} 点AD（当前 ${hero.ad} → ${hero.ad + bonusAd}），持续2个敌方回合；R返回手牌并变为疾风斩。`;
+      }
+      let windDamage = Math.round(12 + level * 5 + hero.ad * 1.1 + (1 - foe.hp / foe.maxHp) * 35);
+      if (run.augments.includes("windBlade") && foe.hp / foe.maxHp < 0.4) windDamage = Math.round(windDamage * 1.3);
+      if (run.augments.includes("windBlade")) windDamage += Math.min(8, foe.shield);
+      return `疾风斩造成 ${previewDamage(id, windDamage)} 点伤害；敌人已损生命越多伤害越高。使用后结束放逐之锋。`;
     }
     if (id === "attack") {
       let value = hero.ad + level * 2;
@@ -1728,10 +1893,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
   };
 
   const play = (id, index, chosenCard = null) => {
-    const actualCost =
-      id === "q" && run.augments.includes("quickRupture")
-        ? Math.max(0, skillSet[id].cost - 1)
-        : skillSet[id].cost;
+    const actualCost = cardCost(id);
     if (locked || hero.energy < actualCost) return;
     const level = run.upgrades[id];
     let h = { ...hero, energy: hero.energy - actualCost };
@@ -1739,12 +1901,17 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     const interruptedBefore = foe.interrupted;
     const stunnedBefore = foe.stunned;
     const tasteBefore = foe.taste;
+    const rivenQStage = champion.id === "riven" && id === "q" ? (hero.qStage || 0) + 1 : 0;
+    const windSlashBefore = champion.id === "riven" && hero.windSlashReady;
     let damage = 0;
     let message = `使用「${skillSet[id].name}」。`;
     const isSpell = id !== "attack";
     const isBasicAttack = id === "attack" || (champion.id === "darius" && id === "w");
     const bleedCap = run.augments.includes("bloodEmpire") ? 7 : 5;
-    const canCrit = isBasicAttack || (champion.id === "darius" && id === "r") || (champion.id === "jinx" && (id === "w" || id === "r"));
+    const canCrit = isBasicAttack || (champion.id === "darius" && id === "r") || (champion.id === "jinx" && (id === "w" || id === "r")) || (champion.id === "riven" && id === "r" && windSlashBefore);
+
+    if (champion.id === "riven" && hero.valorDiscount && (id === "q" || id === "w"))
+      h.valorDiscount = false;
 
     if (id === "attack" && h.blind > 0) {
       h.blind -= 1;
@@ -1863,36 +2030,133 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         damage = Math.round(8 + level * 4 + h.ap * 0.8);
         if (f.taste >= 3) {
           f.taste = 0;
-          const result = attemptStun(f, 2);
-          message = result === "stunned" ? "巨舌鞭笞消耗品味并眩晕敌人！" : "巨舌鞭笞被控制免疫抵挡！";
+          const result = attemptStun(f, 1);
+          message = result === "stunned"
+            ? "巨舌鞭笞消耗品味并眩晕敌人！"
+            : result === "immune"
+              ? "巨舌鞭笞消耗品味，但控制被免疫抵挡！"
+              : `巨舌鞭笞消耗品味，韧性压力 ${f.stunProgress}/${maxTenacity}。`;
+        } else {
+          f.taste = Math.min(3, f.taste + 1);
+          message = `巨舌鞭笞施加1层品味，当前 ${f.taste}/3。`;
         }
       }
       if (id === "w") {
         damage = Math.round(11 + level * 4 + h.ap * 0.7);
-        if (intent.charge || intent.dangerous) f.interrupted = true;
+        f.taste = Math.min(3, f.taste + 2);
+        if (intent.charge || intent.dangerous) {
+          f.interrupted = true;
+          message = `深渊潜航施加2层品味并打断危险行动，当前 ${f.taste}/3。`;
+        } else message = `深渊潜航施加2层品味，当前 ${f.taste}/3；基础行动无法被打断。`;
       }
       if (id === "e") {
-        const shield = Math.round(Math.max(h.maxHp * 0.12, h.grayDamage * 0.7));
         const shieldItems = run.gear.filter((gearId) => equipment[gearId].tags.includes("护盾")).length;
-        const amplified = Math.round(shield * (run.gear.includes("moonstone") ? 1.35 : 1) * (run.gear.includes("dawncore") ? 1 + shieldItems * 0.08 : 1));
+        const amplified = tahmShieldAmount(h, shieldItems, run.gear.includes("moonstone"), run.gear.includes("dawncore"));
+        const previousTemporaryShield = Math.min(h.shield, h.temporaryShield || 0);
+        h.shield -= previousTemporaryShield;
         h.shield += amplified;
-        if (run.gear.includes("moonstone")) h.hp = Math.min(h.maxHp, h.hp + Math.round(amplified * 0.2));
-        if (run.augments.includes("shieldBash")) h.shieldBash = Math.round(amplified * 0.4);
+        h.temporaryShield = amplified;
+        if (run.gear.includes("moonstone")) h.hp = Math.min(h.maxHp, h.hp + Math.round(amplified * 0.15));
+        if (run.augments.includes("shieldBash")) {
+          h.shieldBash = Math.round(amplified * 0.3);
+          h.shieldBashTemporary = true;
+        }
         h.grayDamage = 0;
         message = `厚实表皮获得 ${amplified} 点护盾。`;
       }
       if (id === "r") {
         damage = Math.round(14 + level * 5 + h.maxHp * 0.08 + h.ap * 0.6);
         if (tasteBefore >= 3) {
-          damage = Math.round(damage * 1.35);
+          damage = Math.round(damage * 1.5);
           f.taste = 0;
-          message = "大快朵颐消耗3层品味，伤害提高35%。";
+          message = "大快朵颐消耗3层品味，伤害提高50%并提高斩杀线。";
         }
-        const executeLine = base.boss || base.finalBoss
-          ? Math.min(0.16, 0.08 + level * 0.02)
-          : Math.min(0.28, 0.18 + level * 0.03);
+        const executeLine = tahmExecuteRatio(level, base.boss || base.finalBoss, tasteBefore >= 3);
         const execute = f.hp / f.maxHp <= executeLine;
         if (execute) damage = Math.max(damage, f.hp + f.shield);
+      }
+    }
+    if (champion.id === "riven") {
+      if (id === "attack") {
+        damage = h.ad + level * 2;
+        if (h.runeCharge > 0) {
+          const bonus = Math.round(4 + h.ad * 0.6);
+          damage += bonus;
+          h.runeCharge -= 1;
+          h.rivenEmpoweredAttacksTurn += 1;
+          message = `符文之刃消耗1层充能，基础伤害 +${bonus}。`;
+        }
+      }
+      if (id === "q") {
+        damage = rivenQStage === 1
+          ? Math.round(7 + h.ad * 0.75 + level * 3)
+          : rivenQStage === 2
+            ? Math.round(9 + h.ad * 0.8 + level * 3)
+            : Math.round(12 + h.ad * 0.9 + level * 4);
+        h.qStage = rivenQStage < 3 ? rivenQStage : 0;
+        h.runeCharge = Math.min(3, h.runeCharge + 1);
+        message = `折翼之舞第${rivenQStage}段命中，符文充能 ${h.runeCharge}/3。`;
+        if (rivenQStage === 3) {
+          if (intent.dangerous || intent.buff || intent.heal || intent.shield || intent.charge) {
+            f.interrupted = true;
+            message += ` 打断「${intent.name}」，敌人改用普攻。`;
+          } else message += " 当前基础行动无法被打断。";
+          if (run.augments.includes("lightspeedCombo") && !h.lightspeedUsed && h.rivenEmpoweredAttacksTurn >= 2) {
+            h.energy = Math.min(h.maxEnergy, h.energy + 1);
+            h.bonusDraw += 1;
+            h.returnQ = true;
+            h.lightspeedUsed = true;
+            message += " 光速QA恢复1能量、抽1张并让Q返回手牌。";
+          }
+        }
+      }
+      if (id === "w") {
+        damage = Math.round(8 + h.ad * 0.65 + level * 4);
+        const charged = h.runeCharge >= 2;
+        if (charged) {
+          h.runeCharge -= 2;
+          const result = attemptStun(f, 1);
+          message = result === "stunned"
+            ? "震魂怒吼消耗2层符文充能并眩晕敌人！"
+            : result === "immune"
+              ? "震魂怒吼消耗2层符文充能，但控制被免疫。"
+              : `震魂怒吼消耗2层符文充能，韧性压力 ${f.stunProgress}/${maxTenacity}。`;
+        } else message = `震魂怒吼命中，但符文充能不足（${h.runeCharge}/2）。`;
+        h.runeCharge = Math.min(3, h.runeCharge + 1);
+        message += ` 结算后充能 ${h.runeCharge}/3。`;
+      }
+      if (id === "e") {
+        const shieldItems = run.gear.filter((gearId) => equipment[gearId].tags.includes("护盾")).length;
+        const shield = rivenShieldAmount(h, level, shieldItems, run.gear.includes("moonstone"), run.gear.includes("dawncore"), run.augments.includes("valorMastery"));
+        const previousTemporaryShield = Math.min(h.shield, h.temporaryShield || 0);
+        h.shield = h.shield - previousTemporaryShield + shield;
+        h.temporaryShield = shield;
+        h.valorDiscount = true;
+        h.runeCharge = Math.min(3, h.runeCharge + 1);
+        const moonstoneHealing = run.gear.includes("moonstone") ? Math.min(h.maxHp - h.hp, Math.round(shield * 0.15)) : 0;
+        h.hp += moonstoneHealing;
+        if (run.augments.includes("valorMastery")) h.valorStrike = Math.round(shield * 0.3);
+        message = `勇往直前刷新 ${shield} 点临时护盾${moonstoneHealing ? `并恢复 ${moonstoneHealing} 生命` : ""}；下一张Q或W消耗-1，符文充能 ${h.runeCharge}/3。`;
+      }
+      if (id === "r") {
+        h.runeCharge = Math.min(3, h.runeCharge + 1);
+        if (!windSlashBefore) {
+          const bonusAd = Math.max(1, Math.round(h.ad * 0.25));
+          h.ad += bonusAd;
+          h.rivenBonusAd = bonusAd;
+          h.windSlashReady = true;
+          h.bladeTurns = 2;
+          message = `放逐之锋使AD提高 ${bonusAd} 点并变为疾风斩；剩余2个敌方回合。`;
+        } else {
+          damage = Math.round(12 + level * 5 + h.ad * 1.1 + (1 - f.hp / f.maxHp) * 35);
+          if (run.augments.includes("windBlade") && f.hp / f.maxHp < 0.4) damage = Math.round(damage * 1.3);
+          if (run.augments.includes("windBlade")) damage += Math.min(8, f.shield);
+          h.ad -= h.rivenBonusAd || 0;
+          h.rivenBonusAd = 0;
+          h.windSlashReady = false;
+          h.bladeTurns = 0;
+          message = "疾风斩出手，敌人已损生命越多伤害越高；放逐之锋结束。";
+        }
       }
     }
 
@@ -1916,6 +2180,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (run.gear.includes("youmuu") && !h.pokeUsed) { damage += 8; h.pokeUsed = true; }
       if (run.augments.includes("artillery") && f.shield >= f.maxHp * 0.1) damage = Math.round(damage * 1.2);
       if (id === "w" && run.gear.includes("serylda") && (intent.dangerous || intent.charge)) f.interrupted = true;
+    }
+    if (champion.id === "riven" && damage > 0 && (id === "w" || (id === "r" && windSlashBefore)) && run.gear.includes("youmuu") && !h.pokeUsed) {
+      damage += 8;
+      h.pokeUsed = true;
+      message += " 幽梦之灵使基础伤害 +8。";
     }
     if (canCrit && h.crit > 0 && damage > 0) {
       h.critMeter += h.crit;
@@ -1959,7 +2228,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (id === "attack") h.basicCards += 1;
       if (run.gear.includes("kraken") && h.attacks % 3 === 0) { const proc = Math.round(14 + h.ad * 0.8); damage += proc; message += ` 海妖 +${proc}。`; }
       if (id === "attack" && run.gear.includes("guinsoo") && h.basicCards % 3 === 0) { const proc = Math.round(8 + h.ad * 0.5); damage += proc; message += ` 鬼索 +${proc}。`; }
-      if (h.shieldBash > 0) { damage += h.shieldBash; message += ` 盾击 +${h.shieldBash}。`; h.shieldBash = 0; }
+      if (h.shieldBash > 0) { damage += h.shieldBash; message += ` 盾击 +${h.shieldBash}。`; h.shieldBash = 0; h.shieldBashTemporary = false; }
       const machineDraw = champion.id === "jinx" && h.weapon === "机枪" && h.minigun >= 3 && run.augments.includes("overclock");
       if (machineDraw && h.drawsTurn < 2) { h.bonusDraw += 1; h.drawsTurn += 1; }
       if (id === "attack" && run.gear.includes("phantom") && h.basicCards % 2 === 0 && h.drawsTurn < 2) { h.bonusDraw += 1; h.drawsTurn += 1; }
@@ -2042,9 +2311,12 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     if ((newlyInterrupted || newlyStunned) && run.gear.includes("iceborn"))
       h.icebornReady = true;
     if (newlyInterrupted && run.gear.includes("fimbulwinter")) {
-      const shield = Math.round(h.maxHp * 0.1);
+      const shield = Math.round(h.maxHp * 0.07);
       h.shield += shield;
-      if (run.augments.includes("shieldBash")) h.shieldBash = Math.round(shield * 0.4);
+      if (run.augments.includes("shieldBash")) {
+        h.shieldBash = Math.round(shield * 0.3);
+        h.shieldBashTemporary = false;
+      }
       message += ` 末日寒冬获得 ${shield} 点护盾。`;
     }
     if (!interruptedBefore && f.interrupted && run.augments.includes("disruptor") && !h.disruptorUsed) {
@@ -2070,7 +2342,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       if (id === "r" && run.gear.includes("axiom")) {
         h.energy = Math.min(h.maxEnergy, h.energy + 1);
         message += " 公理圆弧恢复 1 能量。";
-        if (!h.axiomUsed) {
+        if (!h.axiomUsed && (champion.id !== "riven" || windSlashBefore)) {
           h.axiomUsed = true;
           h.returnUltimate = true;
         }
@@ -2098,7 +2370,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         }
       }
       if (id === "e" && run.gear.includes("frozenheart") && !h.frozenheartUsed) {
-        const shield = Math.round(h.maxHp * 0.08);
+        const shield = Math.round(h.maxHp * 0.06);
         h.energy = Math.min(h.maxEnergy, h.energy + 1);
         h.shield += shield;
         h.frozenheartUsed = true;
@@ -2135,14 +2407,17 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       h.energy = Math.min(h.maxEnergy, h.energy + 1); h.bonusDraw += 1; h.essenceUsed = true; message += " 夺萃回能并抽牌。";
     }
     damage = Math.max(0, Math.round(damage * HERO_DAMAGE_SCALE));
+    if (champion.id === "riven" && id === "attack" && h.valorStrike > 0) {
+      damage += h.valorStrike;
+      message += ` 勇气剑舞 +${h.valorStrike}。`;
+      h.valorStrike = 0;
+    }
     if (id === "r" && champion.id === "cho") {
       const executeLine = 0.22 + level * 0.04 + (run.augments.includes("execution") ? 0.08 : 0);
       if (f.hp / f.maxHp <= executeLine) damage = Math.max(damage, f.hp + f.shield);
     }
     if (id === "r" && champion.id === "tahmkench") {
-      const executeLine = base.boss || base.finalBoss
-        ? Math.min(0.16, 0.08 + level * 0.02)
-        : Math.min(0.28, 0.18 + level * 0.03);
+      const executeLine = tahmExecuteRatio(level, base.boss || base.finalBoss, tasteBefore >= 3);
       if (f.hp / f.maxHp <= executeLine) damage = Math.max(damage, f.hp + f.shield);
     }
     const criticalDamage = h.lastCritical ? damage : 0;
@@ -2194,16 +2469,27 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       message += " 盛宴斩杀了非英雄单位，本次不获得永久生命。";
     }
     const returnsDariusUltimate = champion.id === "darius" && id === "r" && f.bleed >= bleedCap;
+    const returnsRivenQ = champion.id === "riven" && id === "q" && (rivenQStage < 3 || h.returnQ);
+    const returnsRivenUltimate = champion.id === "riven" && id === "r" && !windSlashBefore;
     if (champion.id === "darius" && id === "r") {
       const previousBleed = f.bleed;
       f.bleed = Math.floor(f.bleed / 2);
       message += ` 流血 ${previousBleed} → ${f.bleed} 层。`;
     }
     let nextHand = hand.filter((_, i) => i !== index);
-    let nextDiscard = returnsDariusUltimate ? [...discard] : [...discard, id];
+    let nextDiscard = returnsDariusUltimate || returnsRivenQ || returnsRivenUltimate ? [...discard] : [...discard, id];
     if (returnsDariusUltimate) {
       nextHand.push("r");
       message += " 满层流血使诺克萨斯断头台立即返回手牌。";
+    }
+    if (returnsRivenQ) {
+      nextHand.push("q");
+      h.returnQ = false;
+      message += rivenQStage < 3 ? ` 折翼之舞第${rivenQStage + 1}段返回手牌。` : " 光速QA让折翼之舞第一段返回手牌。";
+    }
+    if (returnsRivenUltimate) {
+      nextHand.push("r");
+      message += " 放逐之锋返回手牌并变为疾风斩。";
     }
     if (h.destinyDraw) {
       const extra = draw(pile, nextDiscard, Math.min(h.destinyDraw, 8 - nextHand.length));
@@ -2217,7 +2503,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       nextHand = [...nextHand, ...extra.cards]; nextDiscard = extra.discard; setPile(extra.pile); h.bonusDraw = 0;
     }
     if (h.returnUltimate) {
-      if (!nextHand.includes("r") && nextHand.length < 8) nextHand.push("r");
+      if (!nextHand.includes("r") && nextHand.length < 8) {
+        const discardedUltimate = nextDiscard.lastIndexOf("r");
+        if (discardedUltimate >= 0) nextDiscard.splice(discardedUltimate, 1);
+        nextHand.push("r");
+      }
       h.returnUltimate = false;
     }
     setHero(h);
@@ -2242,6 +2532,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               critMeter: h.critMeter,
               energyBonus: h.energyBonus || 0,
               openingDraw: h.openingDraw || 0,
+              victoryRecoveryBonus: h.victoryRecoveryBonus || 0,
+              openingShieldBonus: h.openingShieldBonus || 0,
             },
             base,
           ),
@@ -2275,12 +2567,12 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         if (run.gear.includes("lichbane")) h.lichReady = true;
       }
       const blocked = Math.min(h.shield, incoming), taken = incoming - blocked;
-      h.shield -= blocked; h.hp = Math.max(0, h.hp - taken); f.bonus = 0;
+      h.shield -= blocked; h.temporaryShield = Math.max(0, (h.temporaryShield || 0) - blocked); h.hp = Math.max(0, h.hp - taken); f.bonus = 0;
       if (champion.id === "tahmkench") h.grayDamage += taken;
       message = bansheeTriggered
         ? `${base.name}的「${intent.name}」被打断，改用普攻；女妖面纱抵消伤害。`
         : `${base.name}的「${intent.name}」被打断，改用普攻造成 ${taken} 点伤害。`;
-      if (blocked > 0 && run.gear.includes("despair")) { const pulse = Math.round(blocked * 0.5); f = damageFoe(f, pulse); h.hp = Math.min(h.maxHp, h.hp + pulse); message += ` 无终恨意反击并恢复 ${pulse} 点。`; }
+      if (blocked > 0 && run.gear.includes("despair")) { const pulse = Math.round(blocked * 0.35); f = damageFoe(f, pulse); h.hp = Math.min(h.maxHp, h.hp + pulse); message += ` 无终恨意反击并恢复 ${pulse} 点。`; }
       if (taken > 0 && (run.augments.includes("thornBody") || run.gear.includes("thornmail"))) { const reflect = run.gear.includes("thornmail") ? (run.augments.includes("thornBody") ? 12 : 7) : 5; f = damageFoe(f, reflect); message += ` 反击 ${reflect} 点。`; }
       if (h.hp > 0 && h.hp / h.maxHp < 0.4 && run.gear.includes("sterak") && !h.sterakUsed) { const shield = Math.round(h.maxHp * 0.25); h.shield += shield; h.sterakUsed = true; message += ` 斯特拉克获得 ${shield} 点护盾。`; }
     }
@@ -2312,6 +2604,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       const blocked = Math.min(h.shield, incoming),
         taken = incoming - blocked;
       h.shield -= blocked;
+      h.temporaryShield = Math.max(0, (h.temporaryShield || 0) - blocked);
       h.hp = Math.max(0, h.hp - taken);
       f.bonus = 0;
       if (champion.id === "tahmkench") h.grayDamage += taken;
@@ -2323,7 +2616,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         h.blind = Math.max(h.blind, intent.blind);
         message += ` 致盲：接下来 ${intent.blind} 次普攻各有50%几率落空。`;
       }
-      if (blocked > 0 && run.gear.includes("despair")) { const pulse = Math.round(blocked * 0.5); f = damageFoe(f, pulse); h.hp = Math.min(h.maxHp, h.hp + pulse); message += ` 无终恨意反击并恢复 ${pulse} 点。`; }
+      if (blocked > 0 && run.gear.includes("despair")) { const pulse = Math.round(blocked * 0.35); f = damageFoe(f, pulse); h.hp = Math.min(h.maxHp, h.hp + pulse); message += ` 无终恨意反击并恢复 ${pulse} 点。`; }
       if (h.hp > 0 && h.hp / h.maxHp < 0.4 && run.gear.includes("sterak") && !h.sterakUsed) { const shield = Math.round(h.maxHp * 0.25); h.shield += shield; h.sterakUsed = true; message += ` 斯特拉克获得 ${shield} 点护盾。`; }
       if (
         taken > 0 &&
@@ -2338,6 +2631,21 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         message += ` 反击 ${reflect} 点。`;
       }
     }
+    const expiredTemporaryShield = Math.min(h.shield, h.temporaryShield || 0);
+    if (expiredTemporaryShield > 0) {
+      h.shield -= expiredTemporaryShield;
+      message += ` 临时护盾剩余 ${expiredTemporaryShield} 点消失。`;
+    }
+    if (h.shieldBashTemporary) {
+      h.shieldBash = 0;
+      h.shieldBashTemporary = false;
+      message += " E提供的盾击强化随临时护盾消失。";
+    }
+    if (champion.id === "riven" && h.valorStrike > 0) {
+      h.valorStrike = 0;
+      message += " 勇气剑舞的强化普攻机会消失。";
+    }
+    h.temporaryShield = 0;
     if (guardMessage) message = `${guardMessage} ${message}`;
     if (run.gear.includes("sunfire") && f.hp > 0) {
       const burn = Math.round(h.maxHp * 0.04);
@@ -2394,11 +2702,21 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     h.critEnergyUsed = false;
     h.essenceUsed = false;
     h.conqueror = 0;
+    h.rivenEmpoweredAttacksTurn = 0;
+    h.lightspeedUsed = false;
+    if (champion.id === "riven" && h.windSlashReady) {
+      h.bladeTurns = Math.max(0, h.bladeTurns - 1);
+      if (h.bladeTurns === 0) {
+        h.ad -= h.rivenBonusAd || 0;
+        h.rivenBonusAd = 0;
+        h.windSlashReady = false;
+        message += " 放逐之锋持续时间结束，疾风斩消失。";
+      } else message += ` 放逐之锋还可维持 ${h.bladeTurns} 个敌方回合。`;
+    }
     f.turn += 1;
     f.interrupted = false;
     f.silenced = false;
     f.stunned = false;
-    f.stunProgress = 0;
     setHero(h);
     setFoe(f);
     setHand(retainedHand);
@@ -2421,6 +2739,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               critMeter: h.critMeter,
               energyBonus: h.energyBonus || 0,
               openingDraw: h.openingDraw || 0,
+              victoryRecoveryBonus: h.victoryRecoveryBonus || 0,
+              openingShieldBonus: h.openingShieldBonus || 0,
             },
             base,
           ),
@@ -2435,6 +2755,12 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
   const interrupted = foe.interrupted ||
     (foe.silenced && (intent.buff || intent.heal || intent.shield || intent.charge));
   const controlled = foe.stunned || interrupted;
+  const displayedSkill = (id) => {
+    if (champion.id !== "riven") return skillSet[id];
+    if (id === "q") return { ...skillSet[id], name: `折翼之舞 · 第${hero.qStage + 1}段` };
+    if (id === "r" && hero.windSlashReady) return { ...skillSet[id], name: "疾风斩" };
+    return skillSet[id];
+  };
   return (
     <main className="battle-shell">
       <Header
@@ -2478,6 +2804,10 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
             {hero.blind > 0 && <span className="enemy-debuff">☄ 致盲 {hero.blind}次 · 普攻50%落空</span>}
             {champion.id === "twistedfate" && <span>▣ {hero.empowered ? `下一张A：${hero.selectedCard}` : "W：蓝 / 红 / 金三选一"}</span>}
             {champion.id === "jinx" && <span>⇄ {hero.weapon} · 连击 {hero.minigun}</span>}
+            {champion.id === "riven" && <span className={hero.runeCharge >= 2 ? "ready-status" : ""}>◇ 符文充能 {hero.runeCharge}/3 · 下一段Q：{hero.qStage + 1}</span>}
+            {champion.id === "riven" && hero.valorDiscount && <span className="ready-status">⬡ 下一张Q/W消耗 -1</span>}
+            {champion.id === "riven" && hero.windSlashReady && <span className="ready-status">◆ 疾风斩就绪 · 剩余 {hero.bladeTurns} 回合</span>}
+            {hero.temporaryShield > 0 && <span>◫ 临时护盾 {hero.temporaryShield} · 敌方行动后消失</span>}
             {hero.crit > 0 && <span>✹ 暴击 {hero.crit}% · 蓄积 {hero.critMeter}/100</span>}
             {hero.armorPen > 0 && <span>➶ 穿甲 {hero.armorPen}</span>}
             {heartsteelReady && (
@@ -2526,7 +2856,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
           <div className="unit-stats">
             <span>⬡ 护盾 {foe.shield}</span>
             {champion.id === "darius" && <span className="enemy-debuff">✦ 流血 {foe.bleed}/{run.augments.includes("bloodEmpire") ? 7 : 5} · 回合结束造成 {Math.round(foe.bleed * (run.augments.includes("bloodEmpire") ? 3 : 2) * HERO_DAMAGE_SCALE)} 伤害</span>}
-            {champion.id === "tahmkench" && <span className={`enemy-debuff ${foe.taste >= 3 ? "trigger-ready" : ""}`}>◆ 品味 {foe.taste}/3 · {foe.taste >= 3 ? "Q可眩晕 / R增伤" : "普攻继续叠加"}</span>}
+            {champion.id === "tahmkench" && <span className={`enemy-debuff ${foe.taste >= 3 ? "trigger-ready" : ""}`}>◆ 品味 {foe.taste}/3 · {foe.taste >= 3 ? "Q控制 / R强化吞噬" : "A叠1层 · W叠2层"}</span>}
             {foe.stunned && <span>眩晕：无法行动</span>}
             {interrupted && <span>打断：改用普攻</span>}
             {foe.stunProgress > 0 && <span>韧性压力 {foe.stunProgress}/{maxTenacity}</span>}
@@ -2552,11 +2882,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
           {hand.map((id, i) => (
             <SkillCard
               key={`${id}-${i}`}
-              skill={skillSet[id]}
+              skill={displayedSkill(id)}
               text={skillPreview(id)}
               level={run.upgrades[id]}
-              cost={id === "q" && run.augments.includes("quickRupture") ? Math.max(0, skillSet[id].cost - 1) : skillSet[id].cost}
-              disabled={hero.energy < (id === "q" && run.augments.includes("quickRupture") ? Math.max(0, skillSet[id].cost - 1) : skillSet[id].cost)}
+              cost={cardCost(id)}
+              disabled={hero.energy < cardCost(id)}
               onClick={() => {
                 if (champion.id === "twistedfate" && id === "w") setCardChoice({ index: i });
                 else play(id, i);
@@ -2628,7 +2958,7 @@ function SkillCard({
     >
       <span className="card-cost">{cost}</span>
       <span className="skill-key">{skill.key}</span>
-      <span className="card-icon">{skill.icon}</span>
+      <span className="card-icon">{skill.image ? <img src={skill.image} alt="" /> : skill.icon}</span>
       <b>{skill.name}</b>
       <small>
         {skill.typeName} · 强化 {level}
@@ -2638,30 +2968,42 @@ function SkillCard({
   );
 }
 
-const attributePoolFor = (run) => {
-  const physical = run.championId === "darius" || run.championId === "jinx";
-  const chapter = route[run.node]?.chapter || 1;
-  return [
-    { id: physical ? "ad" : "ap", icon: "◇", name: physical ? "磨砺武器" : "聆听魔力", text: `永久获得 ${physical ? [3, 4, 5][chapter - 1] : [7, 9, 12][chapter - 1]} 点 ${physical ? "AD" : "AP"}` },
-    { id: "vitality", icon: "♥", name: "抗寒训练", text: `永久获得 ${[10, 14, 18][chapter - 1]} 点最大生命` },
-    { id: "energy", icon: "◈", name: "灵活调度", text: "每场战斗的最大能量与初始能量 +1" },
-    { id: "draw", icon: "▣", name: "整备牌组", text: "每场战斗的初始手牌 +1" },
-    { id: "crit", icon: "✹", name: "寻找破绽", text: `永久获得 ${[8, 10, 12][chapter - 1]}% 暴击率` },
-    { id: "penetration", icon: "➶", name: "破冰锋刃", text: `永久获得 ${[2, 3, 4][chapter - 1]} 点穿甲` },
+const attributePoolFor = (run, source) => {
+  const chapter = Math.min(2, (route[run.node]?.chapter || 1) - 1);
+  const choices = [
+    { id: "ad", icon: "◇", name: "蛮力练习", text: `永久获得 ${[3, 4, 5][chapter]} 点 AD` },
+    { id: "ap", icon: "◈", name: "奥术冥想", text: `永久获得 ${[7, 9, 12][chapter]} 点 AP` },
+    { id: "vitality", icon: "♥", name: "抗寒训练", text: `永久获得 ${[10, 14, 18][chapter]} 点最大生命` },
+    { id: "crit", icon: "✹", name: "寻找破绽", text: `永久获得 ${[8, 10, 12][chapter]}% 暴击率` },
+    { id: "penetration", icon: "➶", name: "破冰锋刃", text: `永久获得 ${[2, 3, 4][chapter]} 点穿甲` },
+    { id: "recovery", icon: "♨", name: "行军补给", text: "每次普通战斗胜利后的基础恢复量永久增加2%最大生命" },
+    { id: "openingShield", icon: "⬡", name: "迎风架势", text: "每场战斗开始时获得最大生命3%的护盾" },
+    { id: "energy", icon: "◆", name: "灵活调度", text: "每场战斗的最大能量与初始能量 +1", selectionWeight: 0.12 },
+    { id: "draw", icon: "▣", name: "整备牌组", text: "每场战斗的初始手牌 +1（仍不超过8张）", selectionWeight: 0.12 },
   ];
+  if (source === "camp") {
+    choices.push(
+      { id: "campHeal", icon: "✚", name: "围火休整", text: "立即恢复35%最大生命", selectionWeight: 1.4 },
+      { id: "campGold", icon: "◈", name: "搜寻物资", text: `立即获得 ${[10, 14, 18][chapter]} 金币`, selectionWeight: 1.4 },
+    );
+  }
+  return choices;
 };
 
-const attributeChoicesFor = (run, source) => attributePoolFor(run)
-  .sort(
-    (a, b) =>
-      seededRewardScore(`${a.id}:${source}:${run.node}`, run.rewardSeed) -
-      seededRewardScore(`${b.id}:${source}:${run.node}`, run.rewardSeed),
-  )
+const attributeChoicesFor = (run, source) => attributePoolFor(run, source)
+  .sort((a, b) => {
+    const score = (choice) => {
+      const roll = (seededRewardScore(`${choice.id}:${source}:${run.node}`, run.rewardSeed) + 1) / 4294967297;
+      return -Math.log(roll) / (choice.selectionWeight || 1);
+    };
+    return score(a) - score(b);
+  })
   .slice(0, 3);
 
 const applyAttributeChoice = (run, choice) => {
-  const chapter = (route[run.node]?.chapter || 1) - 1;
+  const chapter = Math.min(2, (route[run.node]?.chapter || 1) - 1);
   const hero = { ...run.hero };
+  let gold = run.gold;
   if (choice === "ad") hero.ad += [3, 4, 5][chapter];
   if (choice === "ap") hero.ap += [7, 9, 12][chapter];
   if (choice === "vitality") {
@@ -2673,7 +3015,11 @@ const applyAttributeChoice = (run, choice) => {
   if (choice === "draw") hero.openingDraw = (hero.openingDraw || 0) + 1;
   if (choice === "crit") hero.crit = (hero.crit || 0) + [8, 10, 12][chapter];
   if (choice === "penetration") hero.armorPen = (hero.armorPen || 0) + [2, 3, 4][chapter];
-  return { ...run, hero };
+  if (choice === "recovery") hero.victoryRecoveryBonus = (hero.victoryRecoveryBonus || 0) + 0.02;
+  if (choice === "openingShield") hero.openingShieldBonus = (hero.openingShieldBonus || 0) + 0.03;
+  if (choice === "campHeal") hero.hp = Math.min(hero.maxHp, hero.hp + Math.round(hero.maxHp * 0.35));
+  if (choice === "campGold") gold += [10, 14, 18][chapter];
+  return { ...run, hero, gold };
 };
 
 const applyVictoryGrowth = (hero, championId) => {
@@ -2686,7 +3032,8 @@ const applyVictoryGrowth = (hero, championId) => {
   if (championId === "darius") { gainHealth(2); next.ad += 1; }
   if (championId === "twistedfate") next.ap += 2;
   if (championId === "jinx") { next.ad += 1; next.crit = (next.crit || 0) + 1; }
-  if (championId === "tahmkench") { gainHealth(4); next.ap += 1; }
+  if (championId === "tahmkench") { gainHealth(3); next.ap += 1; }
+  if (championId === "riven") { gainHealth(2); next.ad += 1; }
   return next;
 };
 
@@ -2835,7 +3182,7 @@ function Rest({ run, onChoose, onQuit }) {
         <div>
           <div className="eyebrow">SAFE CAMP</div>
           <h1>暴风雪中的炉火</h1>
-          <p>从三项随机机动强化中选择一项，永久改善后续战斗。</p>
+          <p>从三项随机补给或属性训练中选择一项；强力的初始能量与手牌奖励现在更稀有。</p>
         </div>
       </section>
       <section className="rest-options">
@@ -2852,7 +3199,7 @@ function Rest({ run, onChoose, onQuit }) {
 }
 
 function Augment({ run, onChoose, onQuit }) {
-  const available = augments.filter((a) => !run.augments.includes(a.id) && (!a.champions || a.champions.includes(run.championId)));
+  const available = augments.filter((a) => !run.augments.includes(a.id) && (!a.champions || a.champions.includes(run.championId)) && !a.excludedChampions?.includes(run.championId));
   const personal = available.filter((a) => a.champions?.includes(run.championId));
   const universal = available.filter((a) => !a.champions);
   const choices = [...personal, ...universal]
@@ -2972,7 +3319,7 @@ function GameRun({ championId, onQuit }) {
     }
     setRun((r) => {
       const amp = r.gear.includes("visage") ? 1.5 : 1;
-      const recoveryRatio = 0.1 + (r.gear.includes("warmog") ? 0.18 : 0);
+      const recoveryRatio = 0.1 + (r.hero.victoryRecoveryBonus || 0) + (r.gear.includes("warmog") ? 0.18 : 0);
       const recoveredHero = { ...grownHero, hp: Math.min(grownHero.maxHp, grownHero.hp + Math.round(grownHero.maxHp * recoveryRatio * amp)) };
       return { ...r, hero: recoveredHero, gold: r.gold + enemy.gold };
     });
