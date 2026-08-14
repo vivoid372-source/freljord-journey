@@ -1738,7 +1738,6 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     disruptorUsed: false,
     controlFlowUsed: false,
     runeCharge: 0,
-    qStage: 0,
     valorDiscount: false,
     bladeTurns: 0,
     rivenBonusAd: 0,
@@ -1774,7 +1773,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     frostPower: 0,
     blind: 0,
   });
-  const [hand, setHand] = useState(deck.slice(0, openingHandSize));
+  const initialHand = deck.slice(0, openingHandSize);
+  const [hand, setHand] = useState(initialHand);
+  // Riven Q stages belong to card instances, not to the hero globally. This
+  // keeps two Q cards in the same hand on independent Q1 -> Q2 -> Q3 tracks.
+  const [rivenQStages, setRivenQStages] = useState(() => initialHand.map(() => 0));
   const [pile, setPile] = useState(deck.slice(openingHandSize));
   const [discard, setDiscard] = useState([]);
   const [log, setLog] = useState([
@@ -1885,7 +1888,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     return "resisted";
   };
 
-  const skillPreview = (id) => {
+  const skillPreview = (id, handIndex = -1) => {
     const level = run.upgrades[id];
     if (champion.id === "darius") {
       const bleedCap = run.augments.includes("bloodEmpire") ? 7 : 5;
@@ -2016,7 +2019,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         return `造成 ${previewDamage(id, hero.ad + level * 2 + runeBonus)} 点伤害${runeBonus ? `，消耗1层符文充能（符文之刃基础伤害+${runeBonus}）` : "；当前没有符文充能"}。`;
       }
       if (id === "q") {
-        const stage = (hero.qStage || 0) + 1;
+        const stage = (rivenQStages[handIndex] || 0) + 1;
         const rawDamage = stage === 1
             ? Math.round(6 + hero.ad * 0.65 + level * 2.5)
             : stage === 2
@@ -2100,7 +2103,9 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     const stunnedBefore = foe.stunned;
     const severumBasicAttack = champion.id === "aphelios" && id === "attack" && hero.aphMainWeapon === "severum";
     const tasteBefore = foe.taste;
-    const rivenQStage = champion.id === "riven" && id === "q" ? (hero.qStage || 0) + 1 : 0;
+    const rivenQStage = champion.id === "riven" && id === "q"
+      ? (rivenQStages[index] || 0) + 1
+      : 0;
     const windSlashBefore = champion.id === "riven" && hero.windSlashReady;
     let damage = 0;
     let message = `使用「${skillSet[id].name}」。`;
@@ -2116,8 +2121,10 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       h.blind -= 1;
       if (crypto.getRandomValues(new Uint8Array(1))[0] < 128) {
         const nextHand = hand.filter((_, i) => i !== index);
+        const nextQStages = rivenQStages.filter((_, i) => i !== index);
         setHero(h);
         setHand(nextHand);
+        setRivenQStages(nextQStages);
         setDiscard([...discard, id]);
         setLog([`致盲生效，「${skillSet[id].name}」落空了。`]);
         return;
@@ -2395,7 +2402,6 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
           : rivenQStage === 2
             ? Math.round(8 + h.ad * 0.7 + level * 2.5)
             : Math.round(10 + h.ad * 0.8 + level * 3);
-        h.qStage = rivenQStage < 3 ? rivenQStage : 0;
         h.runeCharge = Math.min(3, h.runeCharge + 1);
         message = `折翼之舞第${rivenQStage}段命中，符文充能 ${h.runeCharge}/3。`;
         if (rivenQStage === 3) {
@@ -2783,48 +2789,60 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       message += ` 流血 ${previousBleed} → ${f.bleed} 层。`;
     }
     let nextHand = hand.filter((_, i) => i !== index);
+    let nextQStages = rivenQStages.filter((_, i) => i !== index);
     let nextDiscard = returnsDariusUltimate || returnsRivenQ || returnsRivenUltimate ? [...discard] : [...discard, id];
     if (returnsDariusUltimate) {
       nextHand.push("r");
+      nextQStages.push(0);
       message += " 满层流血使诺克萨斯断头台立即返回手牌。";
     }
     if (returnsRivenQ) {
       nextHand.push("q");
+      nextQStages.push(rivenQStage < 3 ? rivenQStage : 0);
       h.returnQ = false;
       message += rivenQStage < 3 ? ` 折翼之舞第${rivenQStage + 1}段返回手牌。` : " 光速QA让折翼之舞第一段返回手牌。";
     }
     if (returnsRivenUltimate) {
       nextHand.push("r");
+      nextQStages.push(0);
       message += " 放逐之锋返回手牌并变为疾风斩。";
     }
     if (h.aphGrantQ) {
       const discardedQ = nextDiscard.lastIndexOf("q");
       if (discardedQ >= 0) nextDiscard.splice(discardedQ, 1);
-      if (nextHand.length < 8) nextHand.push("q");
+      if (nextHand.length < 8) {
+        nextHand.push("q");
+        nextQStages.push(0);
+      }
       h.aphGrantQ = false;
     }
     if (h.destinyDraw) {
       const extra = draw(pile, nextDiscard, Math.min(h.destinyDraw, 8 - nextHand.length));
       nextHand = [...nextHand, ...extra.cards];
+      nextQStages = [...nextQStages, ...extra.cards.map(() => 0)];
       nextDiscard = extra.discard;
       setPile(extra.pile);
       h.destinyDraw = 0;
     }
     if (h.bonusDraw) {
       const extra = draw(pile, nextDiscard, Math.min(h.bonusDraw, 8 - nextHand.length));
-      nextHand = [...nextHand, ...extra.cards]; nextDiscard = extra.discard; setPile(extra.pile); h.bonusDraw = 0;
+      nextHand = [...nextHand, ...extra.cards];
+      nextQStages = [...nextQStages, ...extra.cards.map(() => 0)];
+      nextDiscard = extra.discard; setPile(extra.pile); h.bonusDraw = 0;
     }
     if (h.returnUltimate) {
       if (!nextHand.includes("r") && nextHand.length < 8) {
         const discardedUltimate = nextDiscard.lastIndexOf("r");
         if (discardedUltimate >= 0) nextDiscard.splice(discardedUltimate, 1);
         nextHand.push("r");
+        nextQStages.push(0);
       }
       h.returnUltimate = false;
     }
     setHero(h);
     setFoe(f);
     setHand(nextHand);
+    setRivenQStages(nextQStages);
     setDiscard(nextDiscard);
     setLog([message]);
     if (f.hp <= 0) {
@@ -3015,6 +3033,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     const drawCount = Math.max(0, Math.min(4, 8 - hand.length));
     const result = draw(pile, discard, drawCount);
     const retainedHand = [...hand, ...result.cards];
+    const retainedQStages = [...rivenQStages, ...result.cards.map(() => 0)];
     h.energy = Math.max(1, h.maxEnergy - h.drained);
     h.drained = 0;
     h.turn += 1;
@@ -3055,6 +3074,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     setHero(h);
     setFoe(f);
     setHand(retainedHand);
+    setRivenQStages(retainedQStages);
     setPile(result.pile);
     setDiscard(result.discard);
     setLog([message, `保留未使用手牌，补抽 ${result.cards.length} 张。`]);
@@ -3101,7 +3121,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
   const apheliosActiveMarks = champion.id === "aphelios"
     ? APHELIOS_WEAPON_ORDER.filter((weapon) => (foe.apheliosMarks?.[weapon] || 0) > 0)
     : [];
-  const displayedSkill = (id) => {
+  const displayedSkill = (id, handIndex = -1) => {
     if (champion.id === "aphelios") {
       if (id === "q") {
         const weapon = APHELIOS_WEAPONS[hero.aphMainWeapon];
@@ -3111,7 +3131,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       return skillSet[id];
     }
     if (champion.id !== "riven") return skillSet[id];
-    if (id === "q") return { ...skillSet[id], name: `折翼之舞 · 第${hero.qStage + 1}段` };
+    if (id === "q") return { ...skillSet[id], name: `折翼之舞 · 第${(rivenQStages[handIndex] || 0) + 1}段` };
     if (id === "r" && hero.windSlashReady) return { ...skillSet[id], name: "疾风斩" };
     return skillSet[id];
   };
@@ -3159,7 +3179,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
             {champion.id === "twistedfate" && <span>▣ {hero.empowered ? `下一张A：${hero.selectedCard}` : "W：蓝 / 红 / 金三选一"}</span>}
             {champion.id === "twistedfate" && hero.battleBonusGold > 0 && <span className="ready-status">◆ 卡牌骗术 · 胜利额外 +{hero.battleBonusGold} 金币</span>}
             {champion.id === "jinx" && <span>⇄ {hero.weapon} · 连击 {hero.minigun}</span>}
-            {champion.id === "riven" && <span className={hero.runeCharge >= 2 ? "ready-status" : ""}>◇ 符文充能 {hero.runeCharge}/3 · 下一段Q：{hero.qStage + 1}</span>}
+            {champion.id === "riven" && <span className={hero.runeCharge >= 2 ? "ready-status" : ""}>◇ 符文充能 {hero.runeCharge}/3 · 每张Q独立计算Q1→Q2→Q3</span>}
             {champion.id === "riven" && hero.valorDiscount && <span className="ready-status">⬡ 下一张Q消耗 -1</span>}
             {champion.id === "riven" && hero.windSlashReady && <span className="ready-status">◆ 疾风斩就绪 · 剩余 {hero.bladeTurns} 回合</span>}
             {champion.id === "aphelios" && (
@@ -3247,10 +3267,10 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         </div>
         <div className="cards-row">
           {hand.map((id, i) => (
-            <SkillCard
-              key={`${id}-${i}`}
-              skill={displayedSkill(id)}
-              text={skillPreview(id)}
+              <SkillCard
+                key={`${id}-${i}`}
+                skill={displayedSkill(id, i)}
+                text={skillPreview(id, i)}
               level={run.upgrades[id]}
               cost={cardCost(id)}
               status={champion.id === "aphelios" && hero.aphChakrams > 0 && (id === "attack" || id === "q") ? `折镜飞轮 ×${hero.aphChakrams}` : null}
