@@ -4124,3 +4124,6 @@ button {
   .attribute-training-screen .node-actions span { font-size: 9px; }
   .attribute-training-screen .skip-gear { padding: 10px 13px; font-size: 10px; }
 }
+.champion-roster{width:min(1240px,calc(100% - 40px));grid-template-columns:repeat(7,1fr)}
+@media(max-width:900px){.champion-roster{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.champion-roster{grid-template-columns:repeat(2,1fr)}}
