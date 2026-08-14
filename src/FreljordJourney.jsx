@@ -1802,6 +1802,10 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     return cost;
   };
 
+  const titanicBonus = (state = hero) => run.gear.includes("titanic")
+    ? Math.round(state.maxHp * (champion.id === "riven" ? 0.02 : 0.04))
+    : 0;
+
   const previewDamage = (id, startingDamage, options = {}) => {
     const isBasicAttack = options.isBasicAttack ?? id === "attack";
     const isSpell = id !== "attack";
@@ -1837,7 +1841,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     if (hero.armorPen && damage > 0) damage += Math.min(hero.armorPen, foe.shield);
 
     if (isBasicAttack) {
-      if (run.gear.includes("titanic")) damage += Math.round(hero.maxHp * (champion.id === "riven" ? 0.02 : 0.04));
+      damage += titanicBonus(hero);
       if (run.gear.includes("nashor")) damage += Math.round(2 + hero.ap * 0.4);
       if (hero.lichReady) damage += Math.round(5 + hero.ap);
       if (hero.icebornReady) damage += Math.round(hero.maxHp * (champion.id === "riven" ? 0.04 : 0.07));
@@ -2507,7 +2511,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     if (h.armorPen && damage > 0) damage += Math.min(h.armorPen, f.shield);
 
     if (champion.id !== "cho" && isBasicAttack) {
-      if (run.gear.includes("titanic")) damage += Math.round(h.maxHp * (champion.id === "riven" ? 0.02 : 0.04));
+      const titanic = titanicBonus(h);
+      if (titanic) {
+        damage += titanic;
+        message += ` 巨型九头蛇 +${titanic}。`;
+      }
       if (run.gear.includes("nashor")) damage += Math.round(2 + h.ap * 0.4);
       if (h.lichReady) {
         damage += Math.round(5 + h.ap);
@@ -2548,7 +2556,11 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         damage += Math.round(4 + h.maxHp * 0.03 + level * 2);
         h.eCharges -= 1;
       }
-      if (run.gear.includes("titanic")) damage += Math.round(h.maxHp * 0.04);
+      const titanic = titanicBonus(h);
+      if (titanic) {
+        damage += titanic;
+        message += ` 巨型九头蛇 +${titanic}。`;
+      }
       if (run.gear.includes("nashor")) damage += Math.round(2 + h.ap * 0.4);
       if (h.lichReady) {
         damage += Math.round(5 + h.ap);
@@ -3270,7 +3282,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               <SkillCard
                 key={`${id}-${i}`}
                 skill={displayedSkill(id, i)}
-                text={skillPreview(id, i)}
+                text={`${skillPreview(id, i)}${run.gear.includes("titanic") && (id === "attack" || (champion.id === "darius" && id === "w")) ? `；巨型九头蛇额外 ${titanicBonus(hero)} 点伤害` : ""}`}
               level={run.upgrades[id]}
               cost={cardCost(id)}
               status={champion.id === "aphelios" && hero.aphChakrams > 0 && (id === "attack" || id === "q") ? `折镜飞轮 ×${hero.aphChakrams}` : null}
