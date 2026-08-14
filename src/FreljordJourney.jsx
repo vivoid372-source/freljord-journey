@@ -74,6 +74,7 @@ const starterDeck = [...baseStarterDeck];
 
 // 玩家所有直接伤害与卡牌预览共用该倍率，确保显示数值与实际结算一致。
 const HERO_DAMAGE_SCALE = 0.35;
+const BATTLE_VICTORY_TRANSITION_MS = 1000;
 
 const APHELIOS_WEAPON_ORDER = ["calibrum", "severum", "gravitum", "infernum", "crescendum"];
 const APHELIOS_WEAPONS = {
@@ -237,7 +238,7 @@ const championRoster = {
         typeName: "技能",
         cost: 1,
         icon: "✧",
-        text: "获得2层充能，使后续普攻附加魔法伤害。",
+        text: "获得2层充能，使后续普攻附加魔法伤害；每场战斗首次使用时，胜利结算额外获得2+强化等级金币。",
       },
       r: {
         id: "r",
@@ -538,7 +539,7 @@ const championBuilds = {
 const championGuides = {
   cho: { loop: "用Q眩晕跳过敌方回合，W打断危险行动，E强化普攻压低血线，最后用R盛宴斩杀成长。", control: "Q是眩晕：敌人无法行动；W是打断：敌人仍会改用普攻。", warning: "盛宴必须进入卡牌显示的斩杀线；每次斩杀英雄单位永久增加8点最大生命且无上限，并强化心之钢、九头蛇与裂隙制造者。" },
   darius: { loop: "用普攻和W快速叠流血，Q维持续航，满层后以R打出最高爆发。", control: "E只打断特殊行动，敌人随后改用普攻；它不会让敌人跳过回合。", warning: "集齐朔极之矛、实验性海克斯板甲和公理圆弧后，满层流血可让R回手并返还2能量，形成无限断头台。" },
-  twistedfate: { loop: "打出W后三选一：蓝牌回能、红牌增伤、金牌控制；所选牌由下一张A触发。R标记后接Q爆发。", control: "金牌可直接选择。普通怪命中即眩晕；精英与BOSS需要累计2点韧性压力。", warning: "W不造成伤害；选牌后必须用A打出，结算后恢复普通攻击。R会抽牌并让下一张Q提高50%伤害。" },
+  twistedfate: { loop: "打出W后三选一：蓝牌回能、红牌增伤、金牌控制；所选牌由下一张A触发。R标记后接Q爆发。", control: "金牌可直接选择。普通怪命中即眩晕；精英与BOSS需要累计2点韧性压力。", warning: "每场首次E会在胜利结算时额外获得2+强化等级金币，重复使用只刷新充能；R会抽牌并让下一张Q提高50%伤害。" },
   jinx: { loop: "机枪连续普攻叠至3层后开始抽牌循环；需要爆发时用Q切换火箭，W与R负责远程收割。", control: "E嚼火者是眩晕：敌人本回合完全无法行动；赛瑞尔达强化的W只是打断。", warning: "金克斯牌组只保留1张切枪Q，其余替换为A普攻；机枪抽牌每回合有上限，破败与饮血剑提供续航。" },
   tahmkench: { loop: "普攻叠1层、W叠2层品味；满层后在Q控制与R强化吞噬之间取舍，E在敌方行动前刷新临时护盾。", control: "满3层Q消耗品味并施加1点韧性压力；普通敌人立即眩晕，精英与BOSS需要累计2点。W只在危险行动时打断。", warning: "E护盾不能跨敌方行动保留或重复叠加；满层R伤害提高50%并提高斩杀线。" },
   riven: { loop: "技能获得符文充能，A消耗充能追加伤害；Q前两段回手，第三段打断。E减免下一张Q，三段Q与穿插A总计恰好消耗3能量。", control: "Q3稳定打断特殊行动，敌人仍会改用普攻；W需要先积攒2层符文充能才能施加1点韧性压力。", warning: "R第一段提高20%AD并变为疾风斩；两回合内不打出疾风斩，强化与二段R都会消失。" },
@@ -1660,6 +1661,8 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
     empowered: false,
     selectedCard: null,
     trickCharges: 0,
+    trickGoldClaimed: false,
+    battleBonusGold: 0,
     weapon: "机枪",
     minigun: 0,
     grayDamage: 0,
@@ -1867,7 +1870,10 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
         return `造成 ${previewDamage(id, Math.round((9 + level * 4 + hero.ap) * (foe.marked ? 1.5 : 1)))} 点伤害${foe.marked ? "并消耗命运标记" : ""}。`;
       if (id === "w")
         return "三选一：蓝牌恢复2能量、红牌额外造成伤害、金牌施加眩晕；所选牌替换下一张A。";
-      if (id === "e") return `获得 ${2 + Math.floor(level / 2)} 层卡牌骗术，后续每次普攻附加 ${Math.round(4 + hero.ap * 0.45)} 点伤害。`;
+      if (id === "e") {
+        const bonusGold = 2 + level;
+        return `获得 ${2 + Math.floor(level / 2)} 层卡牌骗术，后续每次普攻附加 ${Math.round(4 + hero.ap * 0.45)} 点伤害；${hero.trickGoldClaimed ? `本场金币奖励已获取（胜利额外+${hero.battleBonusGold}）` : `本场首次使用，胜利结算额外获得${bonusGold}金币`}。`;
+      }
       return `造成 ${previewDamage(id, Math.round(5 + hero.ap * 0.4 + level * 2))} 点伤害，标记敌人并使下一次万能牌伤害提高50%，抽2张牌。`;
     }
     if (champion.id === "jinx") {
@@ -2133,7 +2139,12 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
       }
       if (id === "e") {
         h.trickCharges = 2 + Math.floor(level / 2);
-        message = `获得 ${h.trickCharges} 层卡牌骗术。`;
+        if (!h.trickGoldClaimed) {
+          const bonusGold = 2 + level;
+          h.trickGoldClaimed = true;
+          h.battleBonusGold += bonusGold;
+          message = `获得 ${h.trickCharges} 层卡牌骗术；胜利结算额外获得${bonusGold}金币。`;
+        } else message = `刷新为 ${h.trickCharges} 层卡牌骗术；本场金币奖励已获取。`;
       }
       if (id === "r") {
         damage = Math.round(5 + h.ap * 0.4 + level * 2);
@@ -2795,6 +2806,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               openingDraw: h.openingDraw || 0,
               victoryRecoveryBonus: h.victoryRecoveryBonus || 0,
               openingShieldBonus: h.openingShieldBonus || 0,
+              battleBonusGold: h.battleBonusGold || 0,
               ...(champion.id === "aphelios" ? {
                 aphMainWeapon: h.aphMainWeapon,
                 aphOffWeapon: h.aphOffWeapon,
@@ -2804,7 +2816,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
             },
             base,
           ),
-        350,
+        BATTLE_VICTORY_TRANSITION_MS,
       );
     }
   };
@@ -3023,6 +3035,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
               openingDraw: h.openingDraw || 0,
               victoryRecoveryBonus: h.victoryRecoveryBonus || 0,
               openingShieldBonus: h.openingShieldBonus || 0,
+              battleBonusGold: h.battleBonusGold || 0,
               ...(champion.id === "aphelios" ? {
                 aphMainWeapon: h.aphMainWeapon,
                 aphOffWeapon: h.aphOffWeapon,
@@ -3032,7 +3045,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
             },
             base,
           ),
-        350,
+        BATTLE_VICTORY_TRANSITION_MS,
       );
     } else if (h.hp <= 0) {
       setLocked(true);
@@ -3102,6 +3115,7 @@ function Battle({ run, enemyId, onWin, onLose, onQuit }) {
             <span>⬡ 护盾 {hero.shield}</span>
             {hero.blind > 0 && <span className="enemy-debuff">☄ 致盲 {hero.blind}次 · 普攻50%落空</span>}
             {champion.id === "twistedfate" && <span>▣ {hero.empowered ? `下一张A：${hero.selectedCard}` : "W：蓝 / 红 / 金三选一"}</span>}
+            {champion.id === "twistedfate" && hero.battleBonusGold > 0 && <span className="ready-status">◆ 卡牌骗术 · 胜利额外 +{hero.battleBonusGold} 金币</span>}
             {champion.id === "jinx" && <span>⇄ {hero.weapon} · 连击 {hero.minigun}</span>}
             {champion.id === "riven" && <span className={hero.runeCharge >= 2 ? "ready-status" : ""}>◇ 符文充能 {hero.runeCharge}/3 · 下一段Q：{hero.qStage + 1}</span>}
             {champion.id === "riven" && hero.valorDiscount && <span className="ready-status">⬡ 下一张Q消耗 -1</span>}
@@ -3595,6 +3609,11 @@ function GameRun({ championId, onQuit }) {
     const shuffled = (ids, salt) => [...ids].sort((a, b) => hash(a, salt) - hash(b, salt));
     const corePool = committed.items.filter((id) => pool.includes(id));
     const synergyPool = pool.filter((id) => rankedBuilds.some((build) => build.items.includes(id) && build.items.some((owned) => run.gear.includes(owned))));
+    const rivenSustainPool = run.championId === "riven" && !run.gear.some((id) => id === "bork" || id === "bloodthirster")
+      ? ["bork", "bloodthirster"].filter((id) => !run.gear.includes(id) && !previous.includes(id))
+      : [];
+    // 锐雯不把吸血装列为核心路线，但每次商店有35%概率在非适配位优先出现一件。
+    const offerRivenSustain = rivenSustainPool.length > 0 && hash("riven-sustain", 71) % 100 < 35;
     const choices = [];
     const take = (ids, salt) => {
       const id = shuffled(ids.filter((candidate) => !choices.includes(candidate)), salt)[0];
@@ -3602,7 +3621,7 @@ function GameRun({ championId, onQuit }) {
     };
     take(corePool, 11);
     take(synergyPool, 23);
-    take(irrelevantPool, 37);
+    take(offerRivenSustain ? rivenSustainPool : irrelevantPool, 37);
     shuffled([...pool, ...irrelevantPool], 53).forEach((id) => { if (choices.length < 3 && !choices.includes(id)) choices.push(id); });
     return choices.slice(0, 3);
   }, [run.gear, run.node, run.championId, run.gold, run.shopRoll, run.lastShopStock, run.rewardSeed]);
@@ -3620,14 +3639,14 @@ function GameRun({ championId, onQuit }) {
       setRun((r) => ({
         ...r,
         hero: { ...grownHero, hp: grownHero.maxHp },
-        gold: r.gold + enemy.gold,
+        gold: r.gold + enemy.gold + (hero.battleBonusGold || 0),
         node: r.node + 1,
       }));
       setScreen("map");
       return;
     }
     if (node.finalBoss) {
-      setRun((r) => ({ ...r, hero: { ...grownHero, hp: grownHero.maxHp }, gold: r.gold + enemy.gold }));
+      setRun((r) => ({ ...r, hero: { ...grownHero, hp: grownHero.maxHp }, gold: r.gold + enemy.gold + (hero.battleBonusGold || 0) }));
       setScreen("victory");
       return;
     }
@@ -3635,7 +3654,7 @@ function GameRun({ championId, onQuit }) {
       const amp = r.gear.includes("visage") ? 1.5 : 1;
       const recoveryRatio = 0.1 + (r.hero.victoryRecoveryBonus || 0) + (r.gear.includes("warmog") ? 0.18 : 0);
       const recoveredHero = { ...grownHero, hp: Math.min(grownHero.maxHp, grownHero.hp + Math.round(grownHero.maxHp * recoveryRatio * amp)) };
-      return { ...r, hero: recoveredHero, gold: r.gold + enemy.gold };
+      return { ...r, hero: recoveredHero, gold: r.gold + enemy.gold + (hero.battleBonusGold || 0) };
     });
     setPostBattle({ augment: !!node.augment, finalBoss: !!enemy.finalBoss });
     setBought(false);
